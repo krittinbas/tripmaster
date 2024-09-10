@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myproject/screens/home_page.dart'; // Import ไฟล์ HomePage
+import 'package:tripmaster/screens/home_page.dart'; // Import ไฟล์ HomePage
 
 void main() {
   runApp(const MyApp());

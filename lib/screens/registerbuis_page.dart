@@ -1,14 +1,14 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class RegisterBuisPage extends StatefulWidget {
+  const RegisterBuisPage({super.key});
 
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  _RegisterBuisPageState createState() => _RegisterBuisPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegisterBuisPageState extends State<RegisterBuisPage> {
   bool isChecked = false;
 
   @override
@@ -90,7 +90,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 20),
                     // Username, Phone number, Email, Password, Confirm Password fields
                     const TextField(
                       decoration: InputDecoration(
@@ -182,6 +182,184 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    // Divider for business information section
+                    const Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: Colors.grey,
+                            thickness: 1,
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text(
+                            'Business information',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: Colors.grey,
+                            thickness: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    // Business name, type, address, and Tax ID fields
+                    const TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Business name',
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintStyle: TextStyle(color: Colors.grey),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Dropdown for business type
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                      ),
+                      dropdownColor: Colors
+                          .white, // ปรับตรงนี้เพื่อตั้งสีพื้นหลังของ dropdown
+                      items: [
+                        DropdownMenuItem(
+                          value: 'Tour Operator',
+                          child: Container(
+                            color: Colors
+                                .white, // ตั้งค่าสีพื้นหลังของ DropdownMenuItem เป็นสีขาว
+                            child: const Text(
+                              'Tour Operator',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Travel Agency',
+                          child: Container(
+                            color: Colors.white,
+                            child: const Text(
+                              'Travel Agency',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Adventure Tour Company',
+                          child: Container(
+                            color: Colors.white,
+                            child: const Text(
+                              'Adventure Tour Company',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Eco-Tourism Business',
+                          child: Container(
+                            color: Colors.white,
+                            child: const Text(
+                              'Eco-Tourism Business',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Cultural or Heritage Tour Company',
+                          child: Container(
+                            color: Colors.white,
+                            child: const Text(
+                              'Cultural or Heritage Tour Company',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Luxury Tour Provider',
+                          child: Container(
+                            color: Colors.white,
+                            child: const Text(
+                              'Luxury Tour Provider',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Local Tour Guide Service',
+                          child: Container(
+                            color: Colors.white,
+                            child: const Text(
+                              'Local Tour Guide Service',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {},
+                      hint: const Text(
+                        'Business type',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+                    const TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Business address',
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintStyle: TextStyle(color: Colors.grey),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Tax ID',
+                        filled: true,
+                        fillColor: Colors.white,
+                        hintStyle: TextStyle(color: Colors.grey),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     // Terms and conditions checkbox
                     Row(
@@ -193,22 +371,20 @@ class _RegisterPageState extends State<RegisterPage> {
                               isChecked = value!;
                             });
                           },
-                          activeColor: const Color(
-                              0xFF00164F), // Set the active color for checkbox
-                          checkColor: Colors
-                              .white, // Set the checkmark color inside the checkbox
+                          activeColor: const Color(0xFF00164F),
+                          checkColor: Colors.white,
                         ),
                         Expanded(
                           child: RichText(
                             text: TextSpan(
                               text: 'I agree to all ',
                               style: const TextStyle(
-                                  fontSize: 14, color: Color(0xFF00164F)),
+                                  fontSize: 16, color: Color(0xFF00164F)),
                               children: [
                                 TextSpan(
                                   text: 'terms & conditions',
-                                  style:
-                                      const TextStyle(color: Color(0xFF6B852F)),
+                                  style: const TextStyle(
+                                      color: Color(0xFF6B852F), fontSize: 16),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
                                       print('Terms & Conditions tapped');
