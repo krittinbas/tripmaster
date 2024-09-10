@@ -80,7 +80,16 @@ class LoginPage extends StatelessWidget {
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
                             // Action when "Register now" is tapped
-                            print('Register now tapped');
+                            showModalBottomSheet(
+                              context: context,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20),
+                                ),
+                              ),
+                              builder: (context) => _buildBottomSheet(
+                                  context), // Call the BottomSheet
+                            );
                           },
                       ),
                     ],
@@ -182,6 +191,79 @@ class LoginPage extends StatelessWidget {
                 ),
                 const Spacer(flex: 3),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ฟังก์ชันสำหรับสร้าง Bottom Sheet
+  Widget _buildBottomSheet(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 50,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Select Account Type',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF00164F),
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              // ลอจิกสำหรับ Normal account
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              backgroundColor: const Color(0xFF00164F),
+            ),
+            child: const Text(
+              'Normal account',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton(
+            onPressed: () {
+              // ลอจิกสำหรับ Business account
+              Navigator.pop(context);
+            },
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              side: const BorderSide(color: Color(0xFF00164F)),
+            ),
+            child: const Text(
+              'Business Account',
+              style: TextStyle(
+                fontSize: 18,
+                color: Color(0xFF00164F),
+              ),
             ),
           ),
         ],

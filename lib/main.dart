@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // Import Firebase core package
 import 'package:tripmaster/screens/home_page.dart'; // Import ไฟล์ HomePage
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding
+      .ensureInitialized(); // สำหรับการใช้กับ async code ใน main()
+  await Firebase.initializeApp(); // เรียกใช้การตั้งค่า Firebase
   runApp(const MyApp());
 }
 
