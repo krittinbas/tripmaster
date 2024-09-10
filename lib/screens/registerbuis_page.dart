@@ -236,11 +236,11 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                         filled: true,
                         fillColor: Colors.white,
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
+                          borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
+                          borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
                       ),
