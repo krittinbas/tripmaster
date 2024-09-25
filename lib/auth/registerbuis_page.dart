@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterBuisPage extends StatefulWidget {
   const RegisterBuisPage({super.key});
@@ -11,28 +12,161 @@ class RegisterBuisPage extends StatefulWidget {
 class _RegisterBuisPageState extends State<RegisterBuisPage> {
   bool isChecked = false;
 
+  // Controllers for the text fields
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  final TextEditingController _businessNameController = TextEditingController();
+  final TextEditingController _businessAddressController =
+      TextEditingController();
+  final TextEditingController _taxIDController = TextEditingController();
+
+  String? _businessType; // For dropdown business type
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Function to handle registration
+  Future<void> _register() async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showErrorBottomSheet('Passwords do not match');
+      return;
+    }
+
+    try {
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      // If successful, show success BottomSheet
+      _showRegistrationSuccessBottomSheet();
+    } catch (e) {
+      // If failed, show error BottomSheet
+      _showErrorBottomSheet(e.toString());
+    }
+  }
+
+  // Show success bottom sheet
+  void _showRegistrationSuccessBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      builder: (BuildContext context) {
+        return FractionallySizedBox(
+          widthFactor: 1,
+          child: Container(
+            padding: const EdgeInsets.all(20.0),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Your account has been successfully created.',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                    // Navigate to next page or home page
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    minimumSize: const Size(216, 47),
+                    backgroundColor: const Color(0xFF00164F),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'Get started',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Show error bottom sheet
+  void _showErrorBottomSheet(String message) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      builder: (BuildContext context) {
+        return FractionallySizedBox(
+          widthFactor: 1,
+          child: Container(
+            padding: const EdgeInsets.all(20.0),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Registration Failed',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                Text(message, style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    minimumSize: const Size(216, 47),
+                    backgroundColor: const Color(0xFF00164F),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Background gradient setup for smooth blending
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white,
-                    Color.fromARGB(255, 196, 228, 255),
-                  ],
+                  colors: [Colors.white, Color.fromARGB(255, 196, 228, 255)],
                   stops: [0.4, 1.0],
                 ),
               ),
             ),
           ),
-          // Image at the bottom stretching upward
           Positioned(
             bottom: 0,
             left: 0,
@@ -48,7 +182,6 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
               ),
             ),
           ),
-          // Content overlay with text, fields, and button
           Positioned.fill(
             child: SingleChildScrollView(
               child: Padding(
@@ -57,7 +190,6 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 60),
-                    // Title text
                     const Text(
                       'Create an account',
                       style: TextStyle(
@@ -67,7 +199,6 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Already have an account link
                     RichText(
                       text: TextSpan(
                         children: [
@@ -84,20 +215,19 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
-                                print('Sign in tapped');
+                                Navigator.pushNamed(context, '/login');
                               },
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Username, Phone number, Email, Password, Confirm Password fields
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _usernameController,
+                      decoration: const InputDecoration(
                         hintText: 'Username',
                         filled: true,
                         fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -109,12 +239,12 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _phoneController,
+                      decoration: const InputDecoration(
                         hintText: 'Phone number',
                         filled: true,
                         fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -126,12 +256,12 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
                         hintText: 'Email address',
                         filled: true,
                         fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -143,15 +273,15 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const TextField(
+                    TextField(
+                      controller: _passwordController,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Password',
                         filled: true,
                         fillColor: Colors.white,
                         suffixIcon:
                             Icon(Icons.visibility_off, color: Colors.grey),
-                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -163,15 +293,15 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const TextField(
+                    TextField(
+                      controller: _confirmPasswordController,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Confirm password',
                         filled: true,
                         fillColor: Colors.white,
                         suffixIcon:
                             Icon(Icons.visibility_off, color: Colors.grey),
-                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -183,7 +313,6 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Divider for business information section
                     const Row(
                       children: [
                         Expanded(
@@ -212,13 +341,12 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    // Business name, type, address, and Tax ID fields
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _businessNameController,
+                      decoration: const InputDecoration(
                         hintText: 'Business name',
                         filled: true,
                         fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -230,7 +358,6 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    // Dropdown for business type
                     DropdownButtonFormField<String>(
                       decoration: const InputDecoration(
                         filled: true,
@@ -244,95 +371,51 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                           borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
                       ),
-                      dropdownColor: Colors
-                          .white, // ปรับตรงนี้เพื่อตั้งสีพื้นหลังของ dropdown
-                      items: [
+                      dropdownColor: Colors.white,
+                      items: const [
                         DropdownMenuItem(
                           value: 'Tour Operator',
-                          child: Container(
-                            color: Colors
-                                .white, // ตั้งค่าสีพื้นหลังของ DropdownMenuItem เป็นสีขาว
-                            child: const Text(
-                              'Tour Operator',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ),
+                          child: Text('Tour Operator'),
                         ),
                         DropdownMenuItem(
                           value: 'Travel Agency',
-                          child: Container(
-                            color: Colors.white,
-                            child: const Text(
-                              'Travel Agency',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ),
+                          child: Text('Travel Agency'),
                         ),
                         DropdownMenuItem(
                           value: 'Adventure Tour Company',
-                          child: Container(
-                            color: Colors.white,
-                            child: const Text(
-                              'Adventure Tour Company',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ),
+                          child: Text('Adventure Tour Company'),
                         ),
                         DropdownMenuItem(
                           value: 'Eco-Tourism Business',
-                          child: Container(
-                            color: Colors.white,
-                            child: const Text(
-                              'Eco-Tourism Business',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ),
+                          child: Text('Eco-Tourism Business'),
                         ),
                         DropdownMenuItem(
                           value: 'Cultural or Heritage Tour Company',
-                          child: Container(
-                            color: Colors.white,
-                            child: const Text(
-                              'Cultural or Heritage Tour Company',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ),
+                          child: Text('Cultural or Heritage Tour Company'),
                         ),
                         DropdownMenuItem(
                           value: 'Luxury Tour Provider',
-                          child: Container(
-                            color: Colors.white,
-                            child: const Text(
-                              'Luxury Tour Provider',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ),
+                          child: Text('Luxury Tour Provider'),
                         ),
                         DropdownMenuItem(
                           value: 'Local Tour Guide Service',
-                          child: Container(
-                            color: Colors.white,
-                            child: const Text(
-                              'Local Tour Guide Service',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ),
+                          child: Text('Local Tour Guide Service'),
                         ),
                       ],
-                      onChanged: (value) {},
-                      hint: const Text(
-                        'Business type',
-                        style: TextStyle(color: Colors.black),
-                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _businessType = value;
+                        });
+                      },
+                      hint: const Text('Business type'),
                     ),
-
                     const SizedBox(height: 10),
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _businessAddressController,
+                      decoration: const InputDecoration(
                         hintText: 'Business address',
                         filled: true,
                         fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -344,12 +427,12 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _taxIDController,
+                      decoration: const InputDecoration(
                         hintText: 'Tax ID',
                         filled: true,
                         fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -361,7 +444,6 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    // Terms and conditions checkbox
                     Row(
                       children: [
                         Checkbox(
@@ -397,11 +479,8 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    // Register Button
                     ElevatedButton(
-                      onPressed: () {
-                        // Add your register logic here
-                      },
+                      onPressed: _register,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         minimumSize: const Size(216, 50),

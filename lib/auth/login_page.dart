@@ -1,8 +1,39 @@
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Authentication
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth instance
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  String _errorMessage = '';
+
+  Future<void> _signIn() async {
+    try {
+      // Sign in using Firebase Auth with email and password
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (userCredential.user != null) {
+        // If login is successful, navigate to home
+        Navigator.pushNamed(context, '/home');
+      }
+    } catch (e) {
+      // Catch and show error messages
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +83,6 @@ class LoginPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Spacer(flex: 2),
-                // Welcome back text
                 const Text(
                   'Welcome back',
                   style: TextStyle(
@@ -62,7 +92,6 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Register link text
                 RichText(
                   text: TextSpan(
                     children: [
@@ -101,14 +130,13 @@ class LoginPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
                   child: Column(
                     children: [
-                      const TextField(
-                        decoration: InputDecoration(
+                      TextField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
                           hintText: 'Email address',
                           filled: true,
-                          fillColor: Colors
-                              .white, // Set background color to white or any preferred color
-                          hintStyle:
-                              TextStyle(color: Colors.grey), // Gray hint text
+                          fillColor: Colors.white,
+                          hintStyle: TextStyle(color: Colors.grey),
                           enabledBorder: OutlineInputBorder(
                             borderSide:
                                 BorderSide(color: Colors.grey), // Gray border
@@ -122,15 +150,14 @@ class LoginPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      const TextField(
+                      TextField(
+                        controller: _passwordController,
                         obscureText: true,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: 'Password',
                           filled: true,
-                          fillColor: Colors
-                              .white, // Set background color to white or any preferred color
-                          hintStyle:
-                              TextStyle(color: Colors.grey), // Gray hint text
+                          fillColor: Colors.white,
+                          hintStyle: TextStyle(color: Colors.grey),
                           enabledBorder: OutlineInputBorder(
                             borderSide:
                                 BorderSide(color: Colors.grey), // Gray border
@@ -143,6 +170,13 @@ class LoginPage extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 10),
+                      // Show error message if login fails
+                      if (_errorMessage.isNotEmpty)
+                        Text(
+                          _errorMessage,
+                          style: const TextStyle(color: Colors.red),
+                        ),
                       const SizedBox(height: 10),
                       // Forgot password link
                       Align(
@@ -150,7 +184,7 @@ class LoginPage extends StatelessWidget {
                         child: GestureDetector(
                           onTap: () {
                             // Action when "Forget your password?" is tapped
-                            print('Forget your password? tapped');
+                            Navigator.pushNamed(context, '/forget');
                           },
                           child: const Text(
                             'Forget your password?',
@@ -168,9 +202,8 @@ class LoginPage extends StatelessWidget {
                 const SizedBox(height: 20),
                 // Sign In Button
                 ElevatedButton(
-                  onPressed: () {
-                    // Add your login logic here
-                  },
+                  onPressed:
+                      _signIn, // Call the _signIn function for Firebase Authentication
                   style: ElevatedButton.styleFrom(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 0, vertical: 15),
@@ -225,8 +258,7 @@ class LoginPage extends StatelessWidget {
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
-              // ลอจิกสำหรับ Normal account
-              Navigator.pop(context);
+              Navigator.pushNamed(context, '/normal');
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 15),
@@ -247,8 +279,7 @@ class LoginPage extends StatelessWidget {
           const SizedBox(height: 10),
           OutlinedButton(
             onPressed: () {
-              // ลอจิกสำหรับ Business account
-              Navigator.pop(context);
+              Navigator.pushNamed(context, '/business');
             },
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 15),

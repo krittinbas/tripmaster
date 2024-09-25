@@ -4,10 +4,6 @@ import 'board_page.dart'; // Import หน้า Board
 import 'map_page.dart'; // Import หน้า Map
 import 'profile_page.dart'; // Import หน้า Profile
 import 'trip_page.dart'; // Import หน้า Trip
-import 'welcome_page.dart';
-import 'login_page.dart';
-import 'register_page.dart';
-import 'registerbuis_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,11 +30,11 @@ class _HomePageState extends State<HomePage> {
         index:
             _selectedIndex, // ใช้ index จาก _selectedIndex เพื่อควบคุมการแสดงผล
         children: const [
-          WelcomePage(), // หน้า Home
-          LoginPage(), // หน้า Board
+          HomeScreen(), // หน้า Home
+          BoardPage(), // หน้า Board
           MapPage(), // หน้า Map
-          RegisterPage(), // หน้า Trip
-          RegisterBuisPage(), // หน้า Profile
+          TripPage(), // หน้า Trip
+          ProfilePage(), // หน้า Profile
         ],
       ),
       bottomNavigationBar: BottomNavBar(

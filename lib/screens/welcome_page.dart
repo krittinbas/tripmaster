@@ -16,19 +16,17 @@ class WelcomePage extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.white, // Start with white at the top
-                    Color.fromARGB(
-                        255, 196, 228, 255), // Light blue for blending
+                    Colors.white,
+                    Color.fromARGB(255, 196, 228, 255),
                   ],
                   stops: [
                     0.4,
                     1.0,
-                  ], // Adjust stops for smoother blending with the image
+                  ],
                 ),
               ),
             ),
           ),
-          // Image at the bottom stretching upward
           Positioned(
             bottom: 0,
             left: 0,
@@ -37,28 +35,25 @@ class WelcomePage extends StatelessWidget {
               height: 320,
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(
-                      'assets/screens/background2.png'), // Ensure the path is correct
+                  image: AssetImage('assets/screens/background2.png'),
                   fit: BoxFit.cover,
                   alignment: Alignment.topCenter,
                 ),
               ),
             ),
           ),
-          // Content overlay with text and button
           Positioned.fill(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Spacer(flex: 2),
-                // Title with RichText to style "Master"
                 RichText(
                   text: const TextSpan(
                     children: [
                       TextSpan(
                         text: 'Trip ',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 37,
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
                         ),
@@ -66,16 +61,15 @@ class WelcomePage extends StatelessWidget {
                       TextSpan(
                         text: 'Master',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 37,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF6B852F), // Custom color for "Master"
+                          color: Color(0xFF6B852F),
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Subtitle
                 const Text(
                   'Lorem ipsum dolor sit amet, consectetur\nadipiscing elit, sed do',
                   textAlign: TextAlign.center,
@@ -85,19 +79,18 @@ class WelcomePage extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                // Get Started Button
                 ElevatedButton(
                   onPressed: () {
-                    // Add onPressed logic here
+                    // Navigate to LoginPage
+                    Navigator.pushNamed(context, '/login');
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
-                    minimumSize: const Size(216,
-                        50), // Set width and height to match Sign In button
+                    minimumSize: const Size(216, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    backgroundColor: Color(0xFF00164F), // Dark blue button
+                    backgroundColor: const Color(0xFF00164F),
                   ),
                   child: const Text(
                     'Get Started',

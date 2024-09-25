@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -10,13 +11,95 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   bool isChecked = false;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  final TextEditingController _phoneNumberController =
+      TextEditingController(); // เพิ่มตัวควบคุมสำหรับเบอร์โทรศัพท์
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  void _register() async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showErrorBottomSheet(context, 'Passwords do not match');
+      return;
+    }
+
+    try {
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      // If successful, show bottom sheet
+      _showRegistrationSuccessBottomSheet(context);
+    } catch (e) {
+      // If failed, show error bottom sheet
+      _showErrorBottomSheet(context, e.toString());
+    }
+  }
+
+  void _showErrorBottomSheet(BuildContext context, String message) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      backgroundColor: Colors.white, // พื้นหลังสีขาว
+      builder: (BuildContext context) {
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Registration Failed',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // ปิด BottomSheet
+                },
+                style: ElevatedButton.styleFrom(
+                  fixedSize: const Size(216, 47), // ขนาดปุ่ม 216*47
+                  backgroundColor: const Color(0xFF00164F), // ปุ่มสีฟ้าเข้ม
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30), // ปรับขอบโค้งมน
+                  ),
+                ),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Background gradient setup for smooth blending
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
@@ -32,7 +115,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
-          // Image at the bottom stretching upward
           Positioned(
             bottom: 0,
             left: 0,
@@ -48,7 +130,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
-          // Content overlay with text, fields, and button
           Positioned.fill(
             child: SingleChildScrollView(
               child: Padding(
@@ -57,7 +138,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 60),
-                    // Title text
                     const Text(
                       'Create an account',
                       style: TextStyle(
@@ -67,7 +147,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Already have an account link
                     RichText(
                       text: TextSpan(
                         children: [
@@ -91,7 +170,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    // Username, Phone number, Email, Password, Confirm Password fields
                     const TextField(
                       decoration: InputDecoration(
                         hintText: 'Username',
@@ -109,8 +187,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller:
+                          _phoneNumberController, // ใช้ตัวควบคุมนี้สำหรับเบอร์โทรศัพท์
+                      decoration: const InputDecoration(
                         hintText: 'Phone number',
                         filled: true,
                         fillColor: Colors.white,
@@ -126,8 +206,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
                         hintText: 'Email address',
                         filled: true,
                         fillColor: Colors.white,
@@ -143,9 +224,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const TextField(
+                    TextField(
+                      controller: _passwordController,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Password',
                         filled: true,
                         fillColor: Colors.white,
@@ -163,9 +245,10 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const TextField(
+                    TextField(
+                      controller: _confirmPasswordController,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Confirm password',
                         filled: true,
                         fillColor: Colors.white,
@@ -183,7 +266,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    // Terms and conditions checkbox
                     Row(
                       children: [
                         Checkbox(
@@ -193,10 +275,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               isChecked = value!;
                             });
                           },
-                          activeColor: const Color(
-                              0xFF00164F), // Set the active color for checkbox
-                          checkColor: Colors
-                              .white, // Set the checkmark color inside the checkbox
+                          activeColor: const Color(0xFF00164F),
+                          checkColor: Colors.white,
                         ),
                         Expanded(
                           child: RichText(
@@ -221,10 +301,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    // Register Button
                     ElevatedButton(
                       onPressed: () {
-                        // Add your register logic here
+                        _register(); // Call the register function
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),
@@ -250,6 +329,67 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showRegistrationSuccessBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      builder: (BuildContext context) {
+        return FractionallySizedBox(
+          widthFactor: 1,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFFEFEFEF),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+            ),
+            child: SizedBox(
+              height: 170,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Your account has been successfully created.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/login');
+                        // Proceed to next page
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        minimumSize: const Size(216, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        backgroundColor: const Color(0xFF00164F),
+                      ),
+                      child: const Text(
+                        'Get started',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
