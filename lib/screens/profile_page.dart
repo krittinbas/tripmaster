@@ -9,29 +9,33 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController; // ตัวควบคุม TabBar
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this); // กำหนดจำนวน Tab
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
-    _tabController.dispose(); // ทำการ dispose _tabController เมื่อไม่ใช้งาน
+    _tabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // ตั้งสีพื้นหลังของ Scaffold เป็นสีขาว
+      backgroundColor: Colors.white, // Set background to white
       appBar: AppBar(
-        backgroundColor: Colors.white, // ตั้งสีพื้นหลัง AppBar เป็นสีขาว
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF000D34)),
+          onPressed: () {},
+        ),
         title: const Text(
-          '@username',
+          '@Username',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -54,139 +58,82 @@ class _ProfilePageState extends State<ProfilePage>
       body: Column(
         children: [
           const SizedBox(height: 10),
-          // ส่วนโปรไฟล์และปุ่มแก้ไข
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.grey,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _ProfileStat(label: 'follower', count: 142),
-                              SizedBox(width: 30),
-                              _ProfileStat(label: 'following', count: 23),
-                              SizedBox(width: 30),
-                              _ProfileStat(label: 'trips taken', count: 10),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                const CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.grey,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
+                const Text(
+                  'Profile Name',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF000D34),
+                  ),
+                ),
+                const Text(
+                  '@Username',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 const Padding(
-                  padding: EdgeInsets.only(left: 10),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Name',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF000D34),
-                          ),
-                        ),
-                        Text(
-                          'Bio profile or description',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF6B7280),
-                          ),
-                        ),
-                      ],
+                  padding: EdgeInsets.symmetric(horizontal: 30.0),
+                  child: Text(
+                    'Lorem ipsum dolor sit amet consectetur. Turpis vitae semper dui bibendum',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF6B7280),
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                Row(
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Colors.white, // ตั้งสีพื้นหลังปุ่มเป็นสีขาว
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                            side: const BorderSide(color: Color(0xFF000D34)),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 0,
-                              horizontal: 0), // ปรับระยะห่างของตัวอักษรกับขอบ
-                        ),
-                        child: const Text(
-                          'edit profile',
-                          style: TextStyle(
-                            fontSize: 14, // ปรับขนาดตัวอักษรของปุ่ม
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF000D34),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF000D34)),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.send,
-                          size: 25, // ปรับขนาดไอคอนส่ง
-                          color: Color(0xFF000D34),
-                        ),
-                        onPressed: () {},
-                      ),
-                    ),
+                    _ProfileStat(label: 'Followers', count: 2152),
+                    _ProfileStat(label: 'Following', count: 325),
+                    _ProfileStat(label: 'Trips taken', count: 11),
                   ],
                 ),
                 const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildOutlinedButton(Icons.person, 'Follow', 150, 36),
+                    const SizedBox(width: 10),
+                    _buildOutlinedButton(Icons.send, 'Share', 150, 36),
+                    const SizedBox(width: 10),
+                    _buildIconButton(Icons.notifications, 40, 36),
+                  ],
+                ),
               ],
             ),
           ),
-          // TabBar สำหรับแสดงไอคอนและการเลือก
+          const SizedBox(height: 20),
           TabBar(
             controller: _tabController,
             labelColor: const Color(0xFF000D34),
             unselectedLabelColor: const Color(0xFF6B7280),
             indicatorColor: const Color(0xFF000D34),
+            indicatorSize: TabBarIndicatorSize.label,
             tabs: const [
-              Tab(
-                  icon: Icon(Icons.grid_view,
-                      size: 28)), // ปรับขนาดไอคอนแท็บที่ 1
-              Tab(
-                  icon: Icon(Icons.bookmark_border,
-                      size: 28)), // ปรับขนาดไอคอนแท็บที่ 2
-              Tab(icon: Icon(Icons.group, size: 28)), // ปรับขนาดไอคอนแท็บที่ 3
+              Tab(text: 'My post'),
+              Tab(text: 'Mentioned'),
             ],
           ),
-          // TabBarView สำหรับเนื้อหาในแต่ละแท็บ
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildTabContent('Grid View Content'),
-                _buildTabContent('Bookmarks Content'),
-                _buildTabContent('Groups Content'),
+                _buildTabContent('My Post Content'),
+                _buildTabContent('Mentioned Content'),
               ],
             ),
           ),
@@ -195,7 +142,58 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  // ฟังก์ชันสร้างเนื้อหาสำหรับแต่ละแท็บ
+  Widget _buildOutlinedButton(
+      IconData icon, String label, double width, double height) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: OutlinedButton.icon(
+        onPressed: () {},
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFF000D34)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30.0),
+          ),
+        ),
+        icon: Icon(
+          icon,
+          color: const Color(0xFF000D34),
+          size: 20,
+        ),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF000D34),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, double width, double height) {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: OutlinedButton(
+        onPressed: () {},
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFF000D34)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30.0),
+          ),
+          padding: EdgeInsets.zero,
+        ),
+        child: Icon(
+          icon,
+          color: const Color(0xFF000D34),
+          size: 20,
+        ),
+      ),
+    );
+  }
+
   Widget _buildTabContent(String title) {
     return Center(
       child: Text(

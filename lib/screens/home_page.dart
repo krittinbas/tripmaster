@@ -31,9 +31,9 @@ class _HomePageState extends State<HomePage> {
             _selectedIndex, // ใช้ index จาก _selectedIndex เพื่อควบคุมการแสดงผล
         children: const [
           HomeScreen(), // หน้า Home
-          BoardPage(), // หน้า Board
-          MapPage(), // หน้า Map
           TripPage(), // หน้า Trip
+          MapPage(), // หน้า Map
+          BoardPage(), // หน้า Board
           ProfilePage(), // หน้า Profile
         ],
       ),

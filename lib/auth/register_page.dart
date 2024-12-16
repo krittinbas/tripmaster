@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,10 +16,10 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  final TextEditingController _phoneNumberController =
-      TextEditingController(); // เพิ่มตัวควบคุมสำหรับเบอร์โทรศัพท์
+  final TextEditingController _phoneNumberController = TextEditingController();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   void _register() async {
     if (_passwordController.text != _confirmPasswordController.text) {
@@ -27,15 +28,33 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     try {
+      // สร้างบัญชีผู้ใช้ใน Firebase Authentication
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
-      // If successful, show bottom sheet
+
+      // บันทึกข้อมูลเพิ่มเติมของผู้ใช้ลงใน Firestore
+      await _firestore.collection('User').doc(userCredential.user!.uid).set({
+        'business_id': "",
+        'email': _emailController.text,
+        'password': _passwordController
+            .text, // ไม่ควรเก็บรหัสผ่านแบบ plain text ในฐานข้อมูล
+        'phonenumber': _phoneNumberController.text,
+        'user_bio': "",
+        'user_follower': 0,
+        'user_following': 0,
+        'user_id': userCredential.user!.uid,
+        'user_title': "",
+        'user_triptaken': 0,
+        'username': _emailController.text, // ใช้ email เป็น username
+      });
+
+      // แสดง bottom sheet เมื่อลงทะเบียนสำเร็จ
       _showRegistrationSuccessBottomSheet(context);
     } catch (e) {
-      // If failed, show error bottom sheet
+      // แสดง bottom sheet เมื่อเกิดข้อผิดพลาดในการลงทะเบียน
       _showErrorBottomSheet(context, e.toString());
     }
   }
@@ -46,7 +65,7 @@ class _RegisterPageState extends State<RegisterPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
       ),
-      backgroundColor: Colors.white, // พื้นหลังสีขาว
+      backgroundColor: Colors.white,
       builder: (BuildContext context) {
         return Padding(
           padding: const EdgeInsets.all(20.0),
@@ -72,13 +91,13 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).pop(); // ปิด BottomSheet
+                  Navigator.of(context).pop();
                 },
                 style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(216, 47), // ขนาดปุ่ม 216*47
-                  backgroundColor: const Color(0xFF00164F), // ปุ่มสีฟ้าเข้ม
+                  fixedSize: const Size(216, 47),
+                  backgroundColor: const Color(0xFF00164F),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30), // ปรับขอบโค้งมน
+                    borderRadius: BorderRadius.circular(30),
                   ),
                 ),
                 child: const Text(
@@ -163,7 +182,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
-                                print('Sign in tapped');
+                                Navigator.pushNamed(context, '/login');
                               },
                           ),
                         ],
@@ -188,8 +207,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 10),
                     TextField(
-                      controller:
-                          _phoneNumberController, // ใช้ตัวควบคุมนี้สำหรับเบอร์โทรศัพท์
+                      controller: _phoneNumberController,
                       decoration: const InputDecoration(
                         hintText: 'Phone number',
                         filled: true,
@@ -303,7 +321,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () {
-                        _register(); // Call the register function
+                        _register();
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),
@@ -365,7 +383,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     ElevatedButton(
                       onPressed: () {
                         Navigator.pushNamed(context, '/login');
-                        // Proceed to next page
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),
