@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tripmaster/navigations/bottom_navigation.dart'; // Import ไฟล์ BottomNavigationBar ที่แยกออกมา
+import 'package:tripmaster/routes/bottom_navigation.dart'; // Import ไฟล์ BottomNavigationBar ที่แยกออกมา
 import 'board_page.dart'; // Import หน้า Board
 import 'map_page.dart'; // Import หน้า Map
 import 'profile_page.dart'; // Import หน้า Profile

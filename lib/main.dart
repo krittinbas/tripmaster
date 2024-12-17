@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart'; // Import Firebase core package
-import 'package:tripmaster/auth/forget_page.dart';
-import 'package:tripmaster/screens/home_page.dart'; // Import the HomePage
-import 'package:tripmaster/auth/register_page.dart';
-import 'package:tripmaster/auth/registerbuis_page.dart';
-import 'package:tripmaster/screens/welcome_page.dart'; // Import WelcomePage
-import 'package:tripmaster/auth/login_page.dart'; // Import LoginPage
+import 'package:firebase_core/firebase_core.dart';
+import 'package:tripmaster/routes/app_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,15 +15,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const WelcomePage(),
-        '/login': (context) => const LoginPage(),
-        '/home': (context) => const HomePage(),
-        '/normal': (context) => const RegisterPage(),
-        '/business': (context) => const RegisterBuisPage(),
-        '/forget': (context) => const ForgetPage(),
-      },
+      initialRoute: AppRoutes.welcome, // ใช้ route ชื่อ
+      routes: AppRoutes.routes, // นำเข้า routes ทั้งหมดจาก AppRoutes
     );
   }
 }

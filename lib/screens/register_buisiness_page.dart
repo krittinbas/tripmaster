@@ -1,15 +1,16 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/text_field/custom_text_field.dart';
 
-class RegisterBuisPage extends StatefulWidget {
-  const RegisterBuisPage({super.key});
+class RegisterBusinessPage extends StatefulWidget {
+  const RegisterBusinessPage({super.key});
 
   @override
   _RegisterBuisPageState createState() => _RegisterBuisPageState();
 }
 
-class _RegisterBuisPageState extends State<RegisterBuisPage> {
+class _RegisterBuisPageState extends State<RegisterBusinessPage> {
   bool isChecked = false;
 
   // Controllers for the text fields
@@ -228,6 +229,7 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                         hintText: 'Username',
                         filled: true,
                         fillColor: Colors.white,
+                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -245,6 +247,7 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                         hintText: 'Phone number',
                         filled: true,
                         fillColor: Colors.white,
+                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -262,6 +265,7 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                         hintText: 'Email address',
                         filled: true,
                         fillColor: Colors.white,
+                        hintStyle: TextStyle(color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey),
                           borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -280,6 +284,7 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                         hintText: 'Password',
                         filled: true,
                         fillColor: Colors.white,
+                        hintStyle: TextStyle(color: Colors.grey),
                         suffixIcon:
                             Icon(Icons.visibility_off, color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
@@ -300,6 +305,7 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                         hintText: 'Confirm password',
                         filled: true,
                         fillColor: Colors.white,
+                        hintStyle: TextStyle(color: Colors.grey),
                         suffixIcon:
                             Icon(Icons.visibility_off, color: Colors.grey),
                         enabledBorder: OutlineInputBorder(
@@ -345,6 +351,7 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       controller: _businessNameController,
                       decoration: const InputDecoration(
                         hintText: 'Business name',
+                        hintStyle: TextStyle(color: Colors.grey),
                         filled: true,
                         fillColor: Colors.white,
                         enabledBorder: OutlineInputBorder(
@@ -414,6 +421,7 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       controller: _businessAddressController,
                       decoration: const InputDecoration(
                         hintText: 'Business address',
+                        hintStyle: TextStyle(color: Colors.grey),
                         filled: true,
                         fillColor: Colors.white,
                         enabledBorder: OutlineInputBorder(
@@ -431,6 +439,7 @@ class _RegisterBuisPageState extends State<RegisterBuisPage> {
                       controller: _taxIDController,
                       decoration: const InputDecoration(
                         hintText: 'Tax ID',
+                        hintStyle: TextStyle(color: Colors.grey),
                         filled: true,
                         fillColor: Colors.white,
                         enabledBorder: OutlineInputBorder(

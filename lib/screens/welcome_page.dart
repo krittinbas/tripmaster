@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/buttons/elevated_button.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -79,26 +80,12 @@ class WelcomePage extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                ElevatedButton(
+                EleButton(
+                  title: 'Get Started', // เปลี่ยนข้อความในปุ่ม
                   onPressed: () {
-                    // Navigate to LoginPage
-                    Navigator.pushNamed(context, '/login');
+                    Navigator.pushNamed(context,
+                        '/login'); // ฟังก์ชันที่ต้องการให้ทำงานเมื่อกดปุ่ม
                   },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    minimumSize: const Size(216, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    backgroundColor: const Color(0xFF00164F),
-                  ),
-                  child: const Text(
-                    'Get Started',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                    ),
-                  ),
                 ),
                 const Spacer(flex: 3),
               ],

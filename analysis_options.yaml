@@ -23,6 +23,12 @@ linter:
   rules:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    - avoid_print                       # ห้ามใช้ print ใน Production
+    - prefer_const_constructors         # แนะนำให้ใช้ const constructor
+    - use_key_in_widget_constructors    # เพิ่ม key ใน Widget Constructors
+    - unnecessary_this                  # หลีกเลี่ยงการใช้ 'this' ที่ไม่จำเป็น
+    - prefer_final_fields               # แนะนำให้ใช้ final สำหรับฟิลด์ที่ไม่เปลี่ยนแปลง
+    - prefer_single_quotes              # แนะนำให้ใช้ single quotes แทน double quotes
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
