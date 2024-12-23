@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tripmaster/database/profile_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -10,11 +11,34 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final ProfileService _profileService =
+      ProfileService(); // เพิ่ม ProfileService
+
+  String profileName = "Profile Name";
+  String username = "Username";
+  String bio =
+      "Lorem ipsum dolor sit amet consectetur. Turpis vitae semper dui bibendum";
+  int followers = 0;
+  int following = 0;
+  int tripsTaken = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _fetchProfileData(); // ดึงข้อมูลโปรไฟล์
+  }
+
+  Future<void> _fetchProfileData() async {
+    final data = await _profileService.getUserProfile();
+    setState(() {
+      profileName = data?['name'] ?? "Profile Name";
+      username = "${data?['username']}";
+      bio = data?['bio'] ?? bio;
+      followers = data?['followers'] ?? 0;
+      following = data?['following'] ?? 0;
+      tripsTaken = data?['tripsTaken'] ?? 0;
+    });
   }
 
   @override
@@ -28,15 +52,12 @@ class _ProfilePageState extends State<ProfilePage>
     return Scaffold(
       backgroundColor: Colors.white, // Set background to white
       appBar: AppBar(
+        automaticallyImplyLeading: false, // ปิดการสร้างปุ่มย้อนกลับอัตโนมัติ
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF000D34)),
-          onPressed: () {},
-        ),
-        title: const Text(
-          '@Username',
-          style: TextStyle(
+        title: Text(
+          username,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Color(0xFF000D34),
@@ -55,6 +76,7 @@ class _ProfilePageState extends State<ProfilePage>
           const SizedBox(width: 15),
         ],
       ),
+
       body: Column(
         children: [
           const SizedBox(height: 10),
@@ -66,40 +88,40 @@ class _ProfilePageState extends State<ProfilePage>
                   backgroundColor: Colors.grey,
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Profile Name',
-                  style: TextStyle(
+                Text(
+                  profileName,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF000D34),
                   ),
                 ),
-                const Text(
-                  '@Username',
-                  style: TextStyle(
+                Text(
+                  username,
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF6B7280),
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30.0),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30.0),
                   child: Text(
-                    'Lorem ipsum dolor sit amet consectetur. Turpis vitae semper dui bibendum',
+                    bio,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF6B7280),
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _ProfileStat(label: 'Followers', count: 2152),
-                    _ProfileStat(label: 'Following', count: 325),
-                    _ProfileStat(label: 'Trips taken', count: 11),
+                    _ProfileStat(label: 'Followers', count: followers),
+                    _ProfileStat(label: 'Following', count: following),
+                    _ProfileStat(label: 'Trips taken', count: tripsTaken),
                   ],
                 ),
                 const SizedBox(height: 20),

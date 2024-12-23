@@ -4,6 +4,8 @@ import 'board_page.dart'; // Import หน้า Board
 import 'map_page.dart'; // Import หน้า Map
 import 'profile_page.dart'; // Import หน้า Profile
 import 'trip_page.dart'; // Import หน้า Trip
+import '../widgets/buttons/elevated_button.dart';
+import '../widgets/buttons/outlined_button.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -111,36 +113,20 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 210),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF000D34),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 90, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Text(
-                    'Create Trip',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
+                EleButton(
+                  title: 'Create Trip',
+                  size: const Size(250, 50), // ขนาดปุ่มแบบกำหนดเอง
+                  onPressed: () {
+                    print('Create Trip');
+                  },
                 ),
                 const SizedBox(height: 10),
-                OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 90, vertical: 15),
-                    side: const BorderSide(color: Color(0xFF000D34)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Text(
-                    'Join Tour',
-                    style: TextStyle(color: Color(0xFF000D34), fontSize: 16),
-                  ),
+                OutButton(
+                  title: 'Join Tour',
+                  size: const Size(250, 50), // ขนาดปุ่มแบบกำหนดเอง
+                  onPressed: () {
+                    print('Join Tour');
+                  },
                 ),
               ],
             ),

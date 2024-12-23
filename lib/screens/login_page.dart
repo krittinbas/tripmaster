@@ -208,10 +208,18 @@ class _LoginPageState extends State<LoginPage> {
       ),
       builder: (context) => AccountSelectionBottomSheet(
         onNormalAccount: () {
-          Navigator.pushNamed(context, '/normal');
+          Navigator.pushNamed(
+            context,
+            '/normal', // ใช้ route เดียวกัน
+            arguments: {'isBusiness': false}, // ส่งข้อมูล argument
+          );
         },
         onBusinessAccount: () {
-          Navigator.pushNamed(context, '/business');
+          Navigator.pushNamed(
+            context,
+            '/business', // ใช้ route เดียวกัน
+            arguments: {'isBusiness': true}, // ส่งข้อมูล argument
+          );
         },
       ),
     );

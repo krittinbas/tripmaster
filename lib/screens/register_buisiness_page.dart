@@ -1,16 +1,18 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../auth/auth_service_register.dart';
+import '../widgets/bottom_sheet/bottom_sheets.dart';
 import '../widgets/text_field/custom_text_field.dart';
 
 class RegisterBusinessPage extends StatefulWidget {
   const RegisterBusinessPage({super.key});
 
   @override
-  _RegisterBuisPageState createState() => _RegisterBuisPageState();
+  _RegisterBusinessPageState createState() => _RegisterBusinessPageState();
 }
 
-class _RegisterBuisPageState extends State<RegisterBusinessPage> {
+class _RegisterBusinessPageState extends State<RegisterBusinessPage> {
+  final _authService = AuthService();
   bool isChecked = false;
 
   // Controllers for the text fields
@@ -25,130 +27,35 @@ class _RegisterBuisPageState extends State<RegisterBusinessPage> {
       TextEditingController();
   final TextEditingController _taxIDController = TextEditingController();
 
-  String? _businessType; // For dropdown business type
+  String? _businessType;
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  // Function to handle registration
   Future<void> _register() async {
-    if (_passwordController.text != _confirmPasswordController.text) {
-      _showErrorBottomSheet('Passwords do not match');
+    if (!isChecked) {
+      showErrorBottomSheet(context, 'Please accept terms and conditions');
       return;
     }
 
-    try {
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      // If successful, show success BottomSheet
-      _showRegistrationSuccessBottomSheet();
-    } catch (e) {
-      // If failed, show error BottomSheet
-      _showErrorBottomSheet(e.toString());
+    if (_passwordController.text != _confirmPasswordController.text) {
+      showErrorBottomSheet(context, 'Passwords do not match');
+      return;
     }
-  }
 
-  // Show success bottom sheet
-  void _showRegistrationSuccessBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-      ),
-      builder: (BuildContext context) {
-        return FractionallySizedBox(
-          widthFactor: 1,
-          child: Container(
-            padding: const EdgeInsets.all(20.0),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Your account has been successfully created.',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/login');
-                    // Navigate to next page or home page
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    minimumSize: const Size(216, 47),
-                    backgroundColor: const Color(0xFF00164F),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Text(
-                    'Get started',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    String? result = await _authService.registerUser(
+      email: _emailController.text,
+      password: _passwordController.text,
+      phoneNumber: _phoneController.text,
+      isBusiness: true,
+      businessName: _businessNameController.text,
+      businessType: _businessType,
+      businessAddress: _businessAddressController.text,
+      taxId: _taxIDController.text,
     );
-  }
 
-  // Show error bottom sheet
-  void _showErrorBottomSheet(String message) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-      ),
-      builder: (BuildContext context) {
-        return FractionallySizedBox(
-          widthFactor: 1,
-          child: Container(
-            padding: const EdgeInsets.all(20.0),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Registration Failed',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                Text(message, style: const TextStyle(fontSize: 14)),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    minimumSize: const Size(216, 47),
-                    backgroundColor: const Color(0xFF00164F),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: const Text(
-                    'OK',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    if (result == null) {
+      showRegistrationSuccessBottomSheet(context);
+    } else {
+      showErrorBottomSheet(context, result);
+    }
   }
 
   @override
@@ -185,330 +92,180 @@ class _RegisterBuisPageState extends State<RegisterBusinessPage> {
           ),
           Positioned.fill(
             child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 60),
-                    const Text(
-                      'Create an account',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 60),
+                  const Text(
+                    'Create a Business Account',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
-                    const SizedBox(height: 8),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          const TextSpan(
-                            text: "Already have an account? ",
-                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        const TextSpan(
+                          text: "Already have an account? ",
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                        TextSpan(
+                          text: "Sign in",
+                          style: const TextStyle(
+                            color: Color(0xFF6B852F),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
-                          TextSpan(
-                            text: "Sign in",
-                            style: const TextStyle(
-                              color: Color(0xFF6B852F),
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () {
-                                Navigator.pushNamed(context, '/login');
-                              },
-                          ),
-                        ],
-                      ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.pushNamed(context, '/login');
+                            },
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: _usernameController,
-                      decoration: const InputDecoration(
-                        hintText: 'Username',
-                        filled: true,
-                        fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _phoneController,
-                      decoration: const InputDecoration(
-                        hintText: 'Phone number',
-                        filled: true,
-                        fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        hintText: 'Email address',
-                        filled: true,
-                        fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
+                  ),
+                  const SizedBox(height: 20),
+                  CustomTextField(
+                      controller: _usernameController, hintText: 'Username'),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                      controller: _phoneController, hintText: 'Phone number'),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                      controller: _emailController, hintText: 'Email address'),
+                  const SizedBox(height: 10),
+                  CustomTextField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        hintText: 'Password',
-                        filled: true,
-                        fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
-                        suffixIcon:
-                            Icon(Icons.visibility_off, color: Colors.grey),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
+                      hintText: 'Password',
+                      isPassword: true),
+                  const SizedBox(height: 10),
+                  CustomTextField(
                       controller: _confirmPasswordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        hintText: 'Confirm password',
-                        filled: true,
-                        fillColor: Colors.white,
-                        hintStyle: TextStyle(color: Colors.grey),
-                        suffixIcon:
-                            Icon(Icons.visibility_off, color: Colors.grey),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                      hintText: 'Confirm password',
+                      isPassword: true),
+                  const SizedBox(height: 20),
+                  const Row(
+                    children: [
+                      Expanded(
+                          child: Divider(color: Colors.grey, thickness: 1)),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          'Business information',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Row(
-                      children: [
-                        Expanded(
-                          child: Divider(
-                            color: Colors.grey,
-                            thickness: 1,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text(
-                            'Business information',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            color: Colors.grey,
-                            thickness: 1,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
+                      Expanded(
+                          child: Divider(color: Colors.grey, thickness: 1)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  CustomTextField(
                       controller: _businessNameController,
-                      decoration: const InputDecoration(
-                        hintText: 'Business name',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
+                      hintText: 'Business name'),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white,
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey),
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey),
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                      ),
-                      dropdownColor: Colors.white,
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'Tour Operator',
-                          child: Text('Tour Operator'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Travel Agency',
-                          child: Text('Travel Agency'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Adventure Tour Company',
-                          child: Text('Adventure Tour Company'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Eco-Tourism Business',
-                          child: Text('Eco-Tourism Business'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Cultural or Heritage Tour Company',
-                          child: Text('Cultural or Heritage Tour Company'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Luxury Tour Provider',
-                          child: Text('Luxury Tour Provider'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Local Tour Guide Service',
-                          child: Text('Local Tour Guide Service'),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _businessType = value;
-                        });
-                      },
-                      hint: const Text('Business type'),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
+                    dropdownColor: Colors.white,
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'Tour Operator', child: Text('Tour Operator')),
+                      DropdownMenuItem(
+                          value: 'Travel Agency', child: Text('Travel Agency')),
+                      DropdownMenuItem(
+                          value: 'Eco-Tourism', child: Text('Eco-Tourism')),
+                      DropdownMenuItem(
+                          value: 'Adventure Tours',
+                          child: Text('Adventure Tours')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _businessType = value;
+                      });
+                    },
+                    hint: const Text('Business type',
+                        style: TextStyle(color: Colors.grey)),
+                  ),
+                  const SizedBox(height: 10),
+                  CustomTextField(
                       controller: _businessAddressController,
-                      decoration: const InputDecoration(
-                        hintText: 'Business address',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
+                      hintText: 'Business address'),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                      controller: _taxIDController, hintText: 'Tax ID'),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: isChecked,
+                        onChanged: (value) {
+                          setState(() {
+                            isChecked = value!;
+                          });
+                        },
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _taxIDController,
-                      decoration: const InputDecoration(
-                        hintText: 'Tax ID',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: isChecked,
-                          onChanged: (value) {
-                            setState(() {
-                              isChecked = value!;
-                            });
-                          },
-                          activeColor: const Color(0xFF00164F),
-                          checkColor: Colors.white,
-                        ),
-                        Expanded(
-                          child: RichText(
-                            text: TextSpan(
-                              text: 'I agree to all ',
-                              style: const TextStyle(
-                                  fontSize: 16, color: Color(0xFF00164F)),
-                              children: [
-                                TextSpan(
-                                  text: 'terms & conditions',
-                                  style: const TextStyle(
-                                      color: Color(0xFF6B852F), fontSize: 16),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = () {
-                                      print('Terms & Conditions tapped');
-                                    },
-                                ),
-                              ],
-                            ),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            text: 'I agree to all ',
+                            style: const TextStyle(
+                                fontSize: 16, color: Color(0xFF00164F)),
+                            children: [
+                              TextSpan(
+                                text: 'terms & conditions',
+                                style: const TextStyle(
+                                    color: Color(0xFF6B852F), fontSize: 16),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    print('Terms & Conditions tapped');
+                                  },
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _register,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        minimumSize: const Size(216, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        backgroundColor: const Color(0xFF00164F),
                       ),
-                      child: const Text(
-                        'Register',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _register,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      minimumSize: const Size(216, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      backgroundColor: const Color(0xFF00164F),
+                    ),
+                    child: const Text(
+                      'Register',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
           ),

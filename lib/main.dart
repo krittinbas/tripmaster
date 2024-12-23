@@ -1,22 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:tripmaster/routes/app_routes.dart';
+import 'package:tripmaster/core/app.dart';
+import 'package:tripmaster/database/firebase_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.welcome, // ใช้ route ชื่อ
-      routes: AppRoutes.routes, // นำเข้า routes ทั้งหมดจาก AppRoutes
-    );
-  }
+  await FirebaseConfig.initializeFirebase(); // โหลด Firebase ผ่าน Service
+  runApp(const MyApp()); // เริ่มต้นแอป
 }
