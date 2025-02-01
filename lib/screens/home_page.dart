@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tripmaster/routes/bottom_navigation.dart'; // Import ไฟล์ BottomNavigationBar ที่แยกออกมา
+import 'package:tripmaster/screens/tripcreator_page.dart';
 import 'board_page.dart'; // Import หน้า Board
 import 'map_page.dart'; // Import หน้า Map
 import 'profile_page.dart'; // Import หน้า Profile
@@ -8,7 +10,15 @@ import '../widgets/buttons/elevated_button.dart';
 import '../widgets/buttons/outlined_button.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String? trip_id;
+
+  final int? initialIndex;
+
+  HomePage({
+    super.key,
+    this.trip_id,
+    this.initialIndex,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -16,6 +26,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0; // ตัวแปรสำหรับเก็บ index ที่ถูกเลือก
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex ?? 0;
+  }
 
   // ฟังก์ชันเมื่อมีการกดที่ BottomNavigationBar
   void _onItemTapped(int index) {
@@ -31,12 +47,12 @@ class _HomePageState extends State<HomePage> {
       body: IndexedStack(
         index:
             _selectedIndex, // ใช้ index จาก _selectedIndex เพื่อควบคุมการแสดงผล
-        children: const [
-          HomeScreen(), // หน้า Home
-          TripPage(), // หน้า Trip
-          MapPage(), // หน้า Map
-          BoardPage(), // หน้า Board
-          ProfilePage(), // หน้า Profile
+        children: [
+          const HomeScreen(), // หน้า Home
+          const TripPage(), // หน้า Trip
+          MapPage(trip_id: widget.trip_id), // หน้า Map
+          const BoardPage(), // หน้า Board
+          const ProfilePage(), // หน้า Profile
         ],
       ),
       bottomNavigationBar: BottomNavBar(
@@ -113,20 +129,42 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 210),
-                EleButton(
-                  title: 'Create Trip',
-                  size: const Size(250, 50), // ขนาดปุ่มแบบกำหนดเอง
+                ElevatedButton(
                   onPressed: () {
-                    print('Create Trip');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const TripCreatorPage()),
+                    );
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF000D34),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 90, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'Create Trip',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
                 ),
                 const SizedBox(height: 10),
-                OutButton(
-                  title: 'Join Tour',
-                  size: const Size(250, 50), // ขนาดปุ่มแบบกำหนดเอง
-                  onPressed: () {
-                    print('Join Tour');
-                  },
+                OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 90, vertical: 15),
+                    side: const BorderSide(color: Color(0xFF000D34)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'Join Tour',
+                    style: TextStyle(color: Color(0xFF000D34), fontSize: 16),
+                  ),
                 ),
               ],
             ),
