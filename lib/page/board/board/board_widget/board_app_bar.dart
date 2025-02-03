@@ -1,8 +1,9 @@
-// lib/screens/board_page/widgets/board_app_bar.dart
+// file: lib/screens/board_page/widgets/board_app_bar.dart
 
 import 'package:flutter/material.dart';
 import 'package:tripmaster/page/board/board/board_controller/board_controller.dart';
 import 'package:tripmaster/page/board/board/board_widget/search_bar_widget.dart';
+import 'package:tripmaster/notification/notification_icon.dart';
 
 class BoardAppBar extends StatelessWidget implements PreferredSizeWidget {
   final BoardController controller;
@@ -66,27 +67,9 @@ class BoardAppBar extends StatelessWidget implements PreferredSizeWidget {
                 onPressed: onFilterPressed,
               ),
             const SizedBox(width: 16),
-            Stack(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.notifications, size: 28),
-                  color: const Color(0xFF000D34),
-                  onPressed: () {},
-                ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    height: 10,
-                    width: 10,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            // แทนที่ Stack ด้วย NotificationIcon ที่เราสร้าง
+            const NotificationIcon(),
+            const SizedBox(width: 8),
           ],
         ),
       ],

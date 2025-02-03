@@ -1,4 +1,8 @@
+// file: lib/page/board/review/post/post_page/post_detail_page.dart
+
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tripmaster/page/board/review/comment/comments_section.dart';
 import 'package:tripmaster/page/board/review/post/post_component/post_detail_components.dart';
 import '../post_state/post_detail_state.dart';
@@ -34,6 +38,54 @@ class PostDetailPage extends StatefulWidget {
 class _PostDetailPageState extends State<PostDetailPage> {
   late final PostDetailStateManager stateManager;
 
+  Future<void> _createCommentNotification(String commentId) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    // ไม่สร้างการแจ้งเตือนถ้าคอมเมนต์โพสต์ตัวเอง
+    if (currentUser.uid == widget.userId) return;
+
+    try {
+      // ดึงข้อมูล username ของผู้ใช้ปัจจุบัน
+      final userDoc = await FirebaseFirestore.instance
+          .collection('User')
+          .doc(currentUser.uid)
+          .get();
+
+      final username = userDoc.data()?['username'] ?? 'unknown';
+
+      // สร้างการแจ้งเตือนใหม่
+      await FirebaseFirestore.instance.collection('Notifications').add({
+        'recipient_id': widget.userId,
+        'sender_id': currentUser.uid,
+        'sender_username': username,
+        'type': 'comment',
+        'post_id': widget.postId,
+        'comment_id': commentId,
+        'created_at': FieldValue.serverTimestamp(),
+        'read': false,
+      });
+    } catch (e) {
+      print('Error creating comment notification: $e');
+    }
+  }
+
+  void showCommentSection(BuildContext context, String postId,
+      PostDetailStateManager stateManager) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CommentsSection(
+        postId: postId,
+        onCommentAdded: (String commentId) async {
+          await _createCommentNotification(commentId);
+          stateManager.refreshCommentCount();
+        },
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +107,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Column(
         children: [
@@ -71,8 +127,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
                     location: widget.location,
                     userId: widget.userId,
                     userDataStream: stateManager.userDataStream,
-                    postStream: stateManager
-                        .postStream, // เปลี่ยนจาก locationStream เป็น postStream
+                    postStream: stateManager.postStream,
                   ),
                   ContentSection(
                     topic: widget.topic,

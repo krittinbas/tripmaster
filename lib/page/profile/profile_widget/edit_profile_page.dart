@@ -286,12 +286,17 @@ class _ProfileFormState extends State<ProfileForm> {
   }
 
   Future<void> _saveProfile(BuildContext context) async {
+    if (_isLoading) return; // ป้องกันการกดซ้ำ
+
     try {
       setState(() => _isLoading = true);
 
       final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-      if (currentUserId == null) return;
+      if (currentUserId == null) {
+        throw Exception('User not logged in');
+      }
 
+      // อัพเดทข้อมูล
       await FirebaseFirestore.instance
           .collection('User')
           .doc(currentUserId)
@@ -301,14 +306,15 @@ class _ProfileFormState extends State<ProfileForm> {
         'user_bio': _bioController.text.trim(),
       });
 
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
         );
-        Navigator.pop(context, true); // ส่ง true เมื่อบันทึกสำเร็จ
+        // ให้แน่ใจว่าจะ pop กลับไปหน้าก่อนหน้า
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating profile: $e')),
         );
@@ -335,7 +341,6 @@ class _ProfileFormState extends State<ProfileForm> {
           '@Username',
           'Enter your username',
           controller: _usernameController,
-          textColor: AppColors.usernameText,
         ),
         const SizedBox(height: 16),
         _buildTextField(
@@ -403,18 +408,18 @@ class _ProfileFormState extends State<ProfileForm> {
             hintStyle: const TextStyle(color: AppColors.secondaryText),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.secondaryColor),
+              borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.secondaryColor),
+              borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: AppColors.primaryColor),
             ),
             contentPadding: const EdgeInsets.all(16),
-            fillColor: AppColors.buttonBackground,
+            fillColor: AppColors.backgroundColor,
             filled: true,
           ),
         ),

@@ -11,7 +11,6 @@ class ProfileHeaderFirebase {
 
   ProfileHeaderFirebase(this.state);
 
-  // เพิ่มฟังก์ชันใหม่สำหรับนับจำนวนโพสต์
   Stream<int> getUserPostCount(String userId) {
     return _firestore
         .collection('Post')
@@ -23,7 +22,6 @@ class ProfileHeaderFirebase {
   void setupSubscriptions() {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
-      // Listen to current user's following count
       final userSub = _firestore
           .collection('User')
           .doc(currentUser.uid)
@@ -39,7 +37,6 @@ class ProfileHeaderFirebase {
       });
       state.userSubscription = userSub;
 
-      // Listen to viewed profile's followers count
       final profileSub = _firestore
           .collection('User')
           .doc(state.widget.profileData.userId)
@@ -59,7 +56,6 @@ class ProfileHeaderFirebase {
   void setupFollowListener() {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null && !state.widget.isCurrentUser) {
-      // Initial follow status check
       _firestore
           .collection('Follow')
           .where('follower_id', isEqualTo: currentUser.uid)
@@ -73,7 +69,6 @@ class ProfileHeaderFirebase {
         }
       });
 
-      // Setup follow status listener
       final followSub = _firestore
           .collection('Follow')
           .where('follower_id', isEqualTo: currentUser.uid)
@@ -102,10 +97,26 @@ class ProfileHeaderFirebase {
       final batch = _firestore.batch();
       final followRef = _firestore.collection('Follow').doc();
 
+      // ดึงข้อมูล username ของผู้ใช้ปัจจุบัน
+      final currentUserDoc =
+          await _firestore.collection('User').doc(currentUser.uid).get();
+
+      final currentUsername = currentUserDoc.data()?['username'] ?? '';
+
       if (state.isFollowing) {
         await _handleUnfollow(currentUser, batch);
       } else {
         await _handleFollow(currentUser, batch, followRef);
+
+        // สร้างการแจ้งเตือนเมื่อกดติดตาม
+        batch.set(_firestore.collection('Notifications').doc(), {
+          'type': 'follow',
+          'sender_id': currentUser.uid,
+          'sender_username': currentUsername,
+          'recipient_id': state.widget.profileData.userId,
+          'created_at': FieldValue.serverTimestamp(),
+          'read': false,
+        });
       }
 
       await batch.commit();

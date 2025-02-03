@@ -13,35 +13,102 @@ class ReviewSection extends StatefulWidget {
 }
 
 class _ReviewSectionState extends State<ReviewSection> {
+// เพิ่มฟังก์ชันสร้างการแจ้งเตือนสำหรับการไลค์
+  Future<void> _createLikeNotification(
+      String postId, String postOwnerId) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    // ไม่สร้างการแจ้งเตือนถ้าไลค์โพสต์ตัวเอง
+    if (currentUser.uid == postOwnerId) return;
+
+    try {
+      // ดึงข้อมูล username ของผู้ใช้ปัจจุบัน
+      final userDoc = await FirebaseFirestore.instance
+          .collection('User')
+          .doc(currentUser.uid)
+          .get();
+
+      final username = userDoc.data()?['username'] ?? 'unknown';
+
+      // สร้างการแจ้งเตือนใหม่
+      await FirebaseFirestore.instance.collection('Notifications').add({
+        'recipient_id': postOwnerId,
+        'sender_id': currentUser.uid,
+        'sender_username': username,
+        'type': 'like',
+        'post_id': postId,
+        'created_at': FieldValue.serverTimestamp(),
+        'read': false,
+      });
+    } catch (e) {
+      print('Error creating like notification: $e');
+    }
+  }
+
   Future<void> _toggleLike(String postId) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
-    final likeRef = FirebaseFirestore.instance.collection('Like').doc();
+    try {
+      // ดึงข้อมูลโพสต์เพื่อหาเจ้าของโพสต์
+      final postDoc =
+          await FirebaseFirestore.instance.collection('Post').doc(postId).get();
 
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Like')
-        .where('post_id', isEqualTo: postId)
-        .where('user_id', isEqualTo: currentUser.uid)
-        .get();
+      if (!postDoc.exists) return;
 
-    if (querySnapshot.docs.isNotEmpty) {
-      await querySnapshot.docs.first.reference.delete();
-      await FirebaseFirestore.instance
-          .collection('Post')
-          .doc(postId)
-          .update({'post_like': FieldValue.increment(-1)});
-    } else {
-      await likeRef.set({
-        'post_id': postId,
-        'user_id': currentUser.uid,
-        'like_id': likeRef.id,
-        'created_at': FieldValue.serverTimestamp()
-      });
-      await FirebaseFirestore.instance
-          .collection('Post')
-          .doc(postId)
-          .update({'post_like': FieldValue.increment(1)});
+      final postData = postDoc.data();
+      if (postData == null) return;
+
+      final postOwnerId = postData['user_id'] as String?;
+      if (postOwnerId == null) return;
+
+      final likeRef = FirebaseFirestore.instance.collection('Like').doc();
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Like')
+          .where('post_id', isEqualTo: postId)
+          .where('user_id', isEqualTo: currentUser.uid)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // ถ้ามีการกดไลค์แล้ว ให้ลบออก
+        await querySnapshot.docs.first.reference.delete();
+        await FirebaseFirestore.instance
+            .collection('Post')
+            .doc(postId)
+            .update({'post_like': FieldValue.increment(-1)});
+
+        // ลบการแจ้งเตือนที่เกี่ยวข้องกับการไลค์นี้
+        final notificationQuery = await FirebaseFirestore.instance
+            .collection('Notifications')
+            .where('sender_id', isEqualTo: currentUser.uid)
+            .where('post_id', isEqualTo: postId)
+            .where('type', isEqualTo: 'like')
+            .get();
+
+        for (var doc in notificationQuery.docs) {
+          await doc.reference.delete();
+        }
+      } else {
+        // ถ้ายังไม่มีการกดไลค์ ให้เพิ่มเข้าไป
+        await likeRef.set({
+          'post_id': postId,
+          'user_id': currentUser.uid,
+          'like_id': likeRef.id,
+          'created_at': FieldValue.serverTimestamp()
+        });
+
+        await FirebaseFirestore.instance
+            .collection('Post')
+            .doc(postId)
+            .update({'post_like': FieldValue.increment(1)});
+
+        // สร้างการแจ้งเตือนเมื่อกดไลค์
+        await _createLikeNotification(postId, postOwnerId);
+      }
+    } catch (e) {
+      print('Error toggling like: $e');
     }
   }
 
@@ -66,6 +133,64 @@ class _ReviewSectionState extends State<ReviewSection> {
     }
   }
 
+  Future<bool?> showDeleteConfirmationBottomSheet(BuildContext context) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                // Indicator bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // Delete Post Button
+                InkWell(
+                  onTap: () => Navigator.pop(context, true),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                          size: 24,
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          'Delete Post',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _deletePost(String postId) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
@@ -84,28 +209,7 @@ class _ReviewSectionState extends State<ReviewSection> {
         return;
       }
 
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Delete Post'),
-            content: const Text('Are you sure you want to delete this post?'),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Cancel'),
-                onPressed: () => Navigator.pop(context, false),
-              ),
-              TextButton(
-                child: const Text('Delete'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.red,
-                ),
-                onPressed: () => Navigator.pop(context, true),
-              ),
-            ],
-          );
-        },
-      );
+      final confirmed = await showDeleteConfirmationBottomSheet(context);
 
       if (confirmed == true) {
         final batch = FirebaseFirestore.instance.batch();

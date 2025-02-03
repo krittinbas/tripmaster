@@ -1,5 +1,8 @@
+// file: lib/widgets/post_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tripmaster/page/board/review/post/post_page/post_detail_page.dart';
 
 class PostCard extends StatefulWidget {
@@ -142,7 +145,6 @@ class _PostCardState extends State<PostCard> {
                     ),
                   ),
                 ),
-                // แสดงปุ่ม More เฉพาะเมื่อเป็นโพสของตัวเอง
                 if (isOwnPost)
                   Positioned(
                     top: 8,
@@ -209,9 +211,29 @@ class _PostCardState extends State<PostCard> {
                               ),
                             ),
                             const SizedBox(width: 20),
-                            const Icon(
-                              Icons.chat_bubble_outline,
-                              color: Color(0xFF000D34),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PostDetailPage(
+                                      imageUrls: widget.imageUrls,
+                                      userId: widget.userId,
+                                      location: widget.location,
+                                      topic: widget.topic,
+                                      description: widget.description,
+                                      likes: currentLikes,
+                                      comments: widget.comments,
+                                      shares: widget.shares,
+                                      postId: widget.postId,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: const Icon(
+                                Icons.chat_bubble_outline,
+                                color: Color(0xFF000D34),
+                              ),
                             ),
                             const SizedBox(width: 6),
                             Text(

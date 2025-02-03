@@ -1,21 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tripmaster/page/board/review/post/post_state/post_detail_state.dart';
 import 'package:tripmaster/page/profile/profile_page.dart';
 
-void showCommentSection(
-    BuildContext context, String postId, PostDetailStateManager stateManager) {
+class CommentsSection extends StatefulWidget {
+  final String postId;
+  final Function(String commentId) onCommentAdded;
+
+  const CommentsSection({
+    Key? key,
+    required this.postId,
+    required this.onCommentAdded,
+  }) : super(key: key);
+
+  @override
+  State<CommentsSection> createState() => _CommentsSectionState();
+}
+
+class _CommentsSectionState extends State<CommentsSection> {
   final TextEditingController commentController = TextEditingController();
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.white,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-    ),
-    builder: (context) => Padding(
+  @override
+  void dispose() {
+    commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
@@ -33,7 +50,7 @@ void showCommentSection(
               ),
             ),
             Expanded(
-              child: CommentList(postId: postId),
+              child: CommentList(postId: widget.postId),
             ),
             Container(
               padding: const EdgeInsets.symmetric(
@@ -95,12 +112,18 @@ void showCommentSection(
                             'comment_id': commentRef.id,
                             'comment_text': commentController.text,
                             'user_id': currentUser.uid,
-                            'post_id': postId,
+                            'post_id': widget.postId,
                             'created_at': FieldValue.serverTimestamp(),
                           };
                           await commentRef.set(commentData);
+
+                          // เรียก callback เพื่อสร้างการแจ้งเตือน
+                          widget.onCommentAdded(commentRef.id);
+
                           commentController.clear();
-                          Navigator.pop(context);
+                          if (mounted) {
+                            Navigator.pop(context);
+                          }
                         } catch (e) {
                           print('Error adding comment: $e');
                         }
@@ -115,8 +138,8 @@ void showCommentSection(
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class CommentList extends StatelessWidget {
