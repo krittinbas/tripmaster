@@ -10,7 +10,7 @@ class DiscoverApiService {
   Future<Map<String, dynamic>> fetchPlaces(
       {required String nextPageToken}) async {
     final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=$nextPageToken&key=$apiKeys',
+      'https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=$nextPageToken&key=$apiKey',
     );
 
     final response = await http.get(url);
@@ -23,6 +23,6 @@ class DiscoverApiService {
   }
 
   String getPhotoUrl(String photoReference) {
-    return 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoReference&key=$apiKeys';
+    return 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoReference&key=$apiKey';
   }
 }

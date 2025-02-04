@@ -99,8 +99,8 @@ class ApiService {
         final apiCategories = categoryMapping[category] ?? [];
         for (String apiCategory in apiCategories) {
           final String url = nextPageToken != null && isPagination
-              ? 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=$nextPageToken&key=$apiKey'
-              : 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$location&radius=10000&type=$apiCategory&key=$apiKey';
+              ? 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=$nextPageToken&key=$apiKeys'
+              : 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$location&radius=10000&type=$apiCategory&key=$apiKeys';
 
           try {
             final response = await http.get(Uri.parse(url));
@@ -161,7 +161,7 @@ class ApiService {
   Future<Map<String, dynamic>> getPlaceDetails(String placeId) async {
     try {
       final url = Uri.parse(
-        'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=formatted_phone_number,website,opening_hours,reviews&key=$apiKey',
+        'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=formatted_phone_number,website,opening_hours,reviews&key=$apiKeys',
       );
 
       final response = await http.get(url);
@@ -180,7 +180,7 @@ class ApiService {
 
   // ฟังก์ชันสร้าง URL สำหรับรูปภาพ
   String getPhotoUrl(String photoReference) {
-    return 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoReference&key=$apiKey';
+    return 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoReference&key=$apiKeys';
   }
 
   // ฟังก์ชันค้นหาสถานที่
@@ -194,7 +194,7 @@ class ApiService {
           : '13.117313,100.922103';
 
       final url = Uri.parse(
-          'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$query&location=$location&radius=50000&key=$apiKey');
+          'https://maps.googleapis.com/maps/api/place/textsearch/json?query=$query&location=$location&radius=50000&key=$apiKeys');
 
       final response = await http.get(url);
       if (response.statusCode == 200) {

@@ -10,7 +10,9 @@ import 'package:http/http.dart' as http;
 import '../../constants/constants.dart';
 
 class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+  final Map<String, dynamic>? initialPlace; // เพิ่มพารามิเตอร์ใหม่
+
+  const MapPage({super.key, this.initialPlace}); // แก้ไขคอนสตรักเตอร์
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -18,7 +20,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   GoogleMapController? mapController;
-  LatLng? currentLocation; // เปลี่ยนเป็น nullable
+  LatLng? currentLocation;
   Set<Marker> markers = {};
   final searchController = TextEditingController();
   String? selectedPlaceName;
@@ -27,7 +29,6 @@ class _MapPageState extends State<MapPage> {
   bool isBottomSheetVisible = false;
   final double _bottomSheetHeight = 220.0;
 
-  // ตำแหน่งเริ่มต้นของแผนที่ (กรุงเทพฯ)
   final LatLng defaultLocation = const LatLng(13.736717, 100.523186);
 
   @override
@@ -40,7 +41,14 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    if (widget.initialPlace != null) {
+      // เพิ่มเงื่อนไขตรวจสอบ initialPlace
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showInitialPlace();
+      });
+    } else {
+      _getCurrentLocation();
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -116,15 +124,86 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  // แก้ไขเมธอด _showInitialPlace()
+  void _showInitialPlace() async {
+    if (widget.initialPlace == null) return;
+
+    final location = widget.initialPlace!['location'] as LatLng;
+    final name = widget.initialPlace!['name'] as String;
+    final address = widget.initialPlace!['address'] as String;
+    final placeId = widget.initialPlace!['placeId'] as String;
+
+    // ดึงข้อมูลรูปภาพจาก Place Details API
+    try {
+      final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=photos&key=$googleApiKey',
+      );
+
+      final response = await http.get(url);
+      final data = jsonDecode(response.body);
+
+      List<String> photoUrls = [];
+      if (data['result']?['photos'] != null) {
+        for (var photo in data['result']['photos']) {
+          final photoReference = photo['photo_reference'];
+          final photoUrl =
+              'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoReference&key=$googleApiKey';
+          photoUrls.add(photoUrl);
+        }
+      }
+
+      setState(() {
+        markers = {
+          Marker(
+            markerId: MarkerId(placeId),
+            position: location,
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            infoWindow: InfoWindow(
+              title: name,
+              snippet: address,
+            ),
+          ),
+        };
+
+        selectedPlaceName = name;
+        selectedPlaceAddress = address;
+        placeImages = photoUrls.isNotEmpty
+            ? photoUrls
+            : [
+                'https://source.unsplash.com/400x300/?place,building',
+              ]; // Fallback image ถ้าไม่มีรูป
+        isBottomSheetVisible = true;
+      });
+
+      mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: location,
+            zoom: 15,
+          ),
+        ),
+      );
+    } catch (e) {
+      print('Error fetching place photos: $e');
+      // ใช้รูปภาพ fallback ถ้าเกิดข้อผิดพลาด
+      setState(() {
+        placeImages = ['https://source.unsplash.com/400x300/?place,building'];
+      });
+    }
+  }
+
+// แก้ไขเมธอด _selectPlace() เพื่อดึงรูปภาพเช่นกัน
   Future<void> _selectPlace(Prediction prediction) async {
     if (prediction.placeId == null) return;
 
     try {
       final apiKey = googleApiKey;
-      final url =
-          'https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.placeId}&key=$apiKey';
+      final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.placeId}&fields=geometry,photos&key=$apiKey',
+      );
 
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(url);
       final data = jsonDecode(response.body);
 
       if (data['status'] != 'OK') return;
@@ -132,8 +211,18 @@ class _MapPageState extends State<MapPage> {
       final result = data['result'];
       final lat = result['geometry']['location']['lat'] as double;
       final lng = result['geometry']['location']['lng'] as double;
-
       final placeLocation = LatLng(lat, lng);
+
+      // ดึงรูปภาพ
+      List<String> photoUrls = [];
+      if (result['photos'] != null) {
+        for (var photo in result['photos']) {
+          final photoReference = photo['photo_reference'];
+          final photoUrl =
+              'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoReference&key=$apiKey';
+          photoUrls.add(photoUrl);
+        }
+      }
 
       if (mounted) {
         setState(() {
@@ -152,12 +241,9 @@ class _MapPageState extends State<MapPage> {
 
           selectedPlaceName = prediction.structuredFormatting?.mainText;
           selectedPlaceAddress = prediction.structuredFormatting?.secondaryText;
-          placeImages = [
-            'https://source.unsplash.com/400x300/?place,building',
-            'https://source.unsplash.com/400x300/?architecture',
-            'https://source.unsplash.com/400x300/?interior',
-            'https://source.unsplash.com/400x300/?restaurant',
-          ];
+          placeImages = photoUrls.isNotEmpty
+              ? photoUrls
+              : ['https://source.unsplash.com/400x300/?place,building'];
           isBottomSheetVisible = true;
         });
 
@@ -182,19 +268,27 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    // กำหนดตำแหน่งเริ่มต้นจาก initialPlace ถ้ามี
+    final initialPosition = widget.initialPlace != null
+        ? widget.initialPlace!['location'] as LatLng
+        : (currentLocation ?? defaultLocation);
+
     return Scaffold(
       body: Stack(
         children: [
           GoogleMap(
             onMapCreated: (controller) {
               mapController = controller;
+              // ถ้ามี initialPlace ให้แสดงทันทีที่แผนที่พร้อม
+              if (widget.initialPlace != null) {
+                _showInitialPlace();
+              }
             },
             initialCameraPosition: CameraPosition(
-              target: currentLocation ??
-                  defaultLocation, // ใช้ตำแหน่งเริ่มต้นถ้ายังไม่มีตำแหน่งจริง
+              target: initialPosition,
               zoom: 15,
             ),
-            markers: markers, // markers จะว่างเปล่าจนกว่าจะได้ตำแหน่งจริง
+            markers: markers,
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:tripmaster/page/map/map_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../constants/constants.dart';
 
 class DetailPage extends StatefulWidget {
   final dynamic place;
@@ -23,11 +26,9 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   Future<void> fetchPlaceDetails(String placeId) async {
-    const apiKey =
-        'AIzaSyBBQyIUAqI34N7i1TNPYEmBXGOAMyOA-P8'; // Replace with your actual API key
-    const apiKeys = 'asd';
+    const apiKey = googleApiKey; // ใส่ API key ของคุณ
     final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=formatted_phone_number,website&key=$apiKeys',
+      'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=formatted_phone_number,website,geometry&key=$apiKey',
     );
 
     try {
@@ -51,12 +52,7 @@ class _DetailPageState extends State<DetailPage> {
 
   String getOpeningStatus(dynamic openingHours) {
     if (openingHours == null) return 'No opening hours available';
-
-    if (openingHours['open_now'] == true) {
-      return 'Open Now';
-    } else {
-      return 'Closed';
-    }
+    return openingHours['open_now'] == true ? 'Open Now' : 'Closed';
   }
 
   @override
@@ -80,7 +76,7 @@ class _DetailPageState extends State<DetailPage> {
                           itemCount: place['photos'].length,
                           itemBuilder: (context, index) {
                             return Image.network(
-                              'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place['photos'][index]['photo_reference']}&key=AIzaSyBBQyIUAqI34N7i1TNPYEmBXGOAMyOA-P8s',
+                              'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place['photos'][index]['photo_reference']}&key=$googleApiKey',
                               width: double.infinity,
                               fit: BoxFit.cover,
                             );
@@ -169,8 +165,7 @@ class _DetailPageState extends State<DetailPage> {
                                           color: Colors.blue,
                                           decoration: TextDecoration.underline,
                                         ),
-                                        overflow:
-                                            TextOverflow.ellipsis, // ตัดข้อความ
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ),
@@ -221,7 +216,28 @@ class _DetailPageState extends State<DetailPage> {
                       children: [
                         ElevatedButton.icon(
                           onPressed: () {
-                            // Implement map functionality here
+                            if (placeDetails?['geometry']?['location'] !=
+                                null) {
+                              final lat =
+                                  placeDetails!['geometry']['location']['lat'];
+                              final lng =
+                                  placeDetails!['geometry']['location']['lng'];
+
+                              // นำทางไปยังหน้า MapPage พร้อมส่งข้อมูลสถานที่
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => MapPage(
+                                    initialPlace: {
+                                      'location': LatLng(lat, lng),
+                                      'name': place['name'],
+                                      'address': place['vicinity'],
+                                      'placeId': place['place_id'],
+                                    },
+                                  ),
+                                ),
+                              );
+                            }
                           },
                           icon: const Icon(Icons.map, color: Color(0xFF000D34)),
                           label: const Text(
