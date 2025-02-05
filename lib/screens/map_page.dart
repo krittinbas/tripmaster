@@ -1,14 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:tripmaster/constants/constants.dart';
-
-import 'package:tripmaster/widgets/placedetails.dart';
+import 'package:tripmaster/services/marker.dart';
+import 'package:tripmaster/services/polyline_service.dart';
 
 class MapPage extends StatefulWidget {
   final String? trip_id;
@@ -33,6 +30,7 @@ class _MapPageState extends State<MapPage> {
   int selectedDay = -1;
   Map<String, dynamic> upload_trips = {};
   final PolylinePoints polylinePoints = PolylinePoints();
+  final PolylineService polylineService = PolylineService();
 
   @override
   void initState() {
@@ -51,73 +49,18 @@ class _MapPageState extends State<MapPage> {
 
     setState(() {
       upload_trips = snapshot.data() as Map<String, dynamic>;
-      if (upload_trips != null) {
-        mapMarkers = uploadMarkers(selectedDay, context);
-      }
     });
+    _updateMarkers();
     _updatePolylines();
   }
 
   Future<void> _updatePolylines() async {
-    _polylines.clear(); // ล้าง polyline เก่าออก
-    List<LatLng> polylineCoordinates = [];
+    Set<Polyline> polylines =
+        await polylineService.updatePolylines(upload_trips, selectedDay);
 
-    if (upload_trips.isEmpty || !upload_trips.containsKey('plan')) return;
-
-    List<dynamic> days = upload_trips['plan'];
-    List<dynamic> selectedDays = selectedDay == -1 ? days : [days[selectedDay]];
-
-    for (var dayIndex = 0; dayIndex < selectedDays.length; dayIndex++) {
-      List<dynamic> places = selectedDays[dayIndex]['places'];
-      if (places.length < 2) continue;
-
-      for (int i = 0; i < places.length - 1; i++) {
-        LatLng start = LatLng(places[i]['location_position']['lat'],
-            places[i]['location_position']['lng']);
-        LatLng end = LatLng(places[i + 1]['location_position']['lat'],
-            places[i + 1]['location_position']['lng']);
-
-        bool isPassed =
-            places[i]['passed'] == '1' && places[i + 1]['passed'] == '1';
-
-        List<LatLng> route = await _getPolylinePoints(start, end);
-
-        List<LatLng> routeCoordinates = List.from(route);
-        polylineCoordinates = routeCoordinates;
-
-        String polylineId = "day_${dayIndex}_segment_${i}_to_${i + 1}";
-
-        setState(() {
-          _polylines.add(
-            Polyline(
-              polylineId: PolylineId(polylineId),
-              color: isPassed
-                  ? const Color.fromARGB(255, 108, 131, 55)
-                  : Colors.grey,
-              width: 5,
-              points: polylineCoordinates,
-            ),
-          );
-        });
-      }
-    }
-  }
-
-  Future<List<LatLng>> _getPolylinePoints(LatLng start, LatLng end) async {
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-      googleApiKey: googleApiKey,
-      request: PolylineRequest(
-          origin: PointLatLng(start.latitude, start.longitude),
-          destination: PointLatLng(end.latitude, end.longitude),
-          mode: TravelMode.driving),
-    );
-
-    if (result.points.isNotEmpty) {
-      return result.points.map((p) => LatLng(p.latitude, p.longitude)).toList();
-    } else {
-      print("Failed to get polyline: ${result.errorMessage}");
-      return [];
-    }
+    setState(() {
+      _polylines = polylines;
+    });
   }
 
   void updatePassStatus() async {
@@ -179,108 +122,17 @@ class _MapPageState extends State<MapPage> {
     } catch (e) {
       print('error: $e');
     }
-    mapMarkers = uploadMarkers(selectedDay, context);
+    _updateMarkers();
     _updatePolylines();
   }
 
-  Future<LatLng> snapToRoad(LatLng location) async {
-    final url =
-        'https://roads.googleapis.com/v1/snapToRoads?path=${location.latitude},${location.longitude}&key=$googleApiKey';
+  void _updateMarkers() async {
+    Set<Marker> markers = await uploadMarkers(
+        selectedDay, upload_trips, context, updatePassStatus);
 
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['snappedPoints'] != null && data['snappedPoints'].isNotEmpty) {
-        final snappedLat = data['snappedPoints'][0]['location']['latitude'];
-        final snappedLng = data['snappedPoints'][0]['location']['longitude'];
-        return LatLng(snappedLat, snappedLng);
-      } else {
-        return location; // Return original if no snapped point is found
-      }
-    } else {
-      throw Exception('Failed to snap to road');
-    }
-  }
-
-  Set<Marker> uploadMarkers(int dayIndex, BuildContext context) {
-    if (upload_trips.isEmpty) return {};
-
-    List<Marker> markers = [];
-    if (dayIndex == -1) {
-      // รวม Marker จากทุกวัน
-      for (var places in upload_trips['plan']!) {
-        print('checktestday: $places');
-        for (var location in places['places']) {
-          print('checktestlocation: $location');
-          final markerColor = location['passed'] == '1'
-              ? BitmapDescriptor.hueGreen
-              : BitmapDescriptor.hueRed;
-
-          print('MarkerId: ${location['location_name']}');
-          markers.add(
-            Marker(
-              markerId: MarkerId(location['location_name']),
-              position: LatLng(
-                location['location_position']['lat'],
-                location['location_position']['lng'],
-              ),
-              icon: BitmapDescriptor.defaultMarkerWithHue(markerColor),
-              onTap: () async {
-                final result = await showModalBottomSheet(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return PlaceDetails(place: location);
-                  },
-                );
-
-                if (result == 'checked_in') {
-                  setState(() {
-                    print("hellotrip : $upload_trips");
-                    updatePassStatus();
-                  });
-                }
-              },
-            ),
-          );
-        }
-      }
-    } else if (dayIndex < upload_trips['plan'].length) {
-      print("upload_trips['plan'] ${upload_trips['plan']}");
-      var dayLocations = upload_trips['plan'][dayIndex];
-      for (var location in dayLocations['places']) {
-        final markerColor = location['passed'] == '1'
-            ? BitmapDescriptor.hueGreen
-            : BitmapDescriptor.hueRed;
-
-        markers.add(
-          Marker(
-            markerId: MarkerId(location['location_name']),
-            position: LatLng(
-              location['location_position']['lat'],
-              location['location_position']['lng'],
-            ),
-            icon: BitmapDescriptor.defaultMarkerWithHue(markerColor),
-            onTap: () async {
-              final result = await showModalBottomSheet(
-                context: context,
-                builder: (context) {
-                  return PlaceDetails(place: location);
-                },
-              );
-
-              if (result == 'checked_in') {
-                setState(() {
-                  updatePassStatus();
-                });
-              }
-            },
-          ),
-        );
-      }
-    }
-
-    return markers.toSet();
+    setState(() {
+      mapMarkers = markers;
+    });
   }
 
   void getCurrentLocation() async {
@@ -359,8 +211,7 @@ class _MapPageState extends State<MapPage> {
                                     } else {
                                       selectedDay = index;
                                     }
-                                    mapMarkers =
-                                        uploadMarkers(selectedDay, context);
+                                    _updateMarkers();
                                     _updatePolylines();
                                   });
                                 },
@@ -388,7 +239,17 @@ class _MapPageState extends State<MapPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       FloatingActionButton(
-                        onPressed: () {},
+                        onPressed: () async {
+                          if (await _controller.isCompleted) {
+                            mapController = await _controller.future;
+                            mapController.animateCamera(
+                              CameraUpdate.newLatLng(
+                                LatLng(currentLocation!.latitude!,
+                                    currentLocation!.longitude!),
+                              ),
+                            );
+                          }
+                        },
                         backgroundColor: Colors.white,
                         shape: const CircleBorder(),
                         child: const Icon(
@@ -410,7 +271,7 @@ class _MapPageState extends State<MapPage> {
                       FloatingActionButton(
                         onPressed: () {
                           setState(() {
-                            mapMarkers = uploadMarkers(selectedDay, context);
+                            _updateMarkers();
                             _updatePolylines();
                           });
                         },

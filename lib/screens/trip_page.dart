@@ -248,7 +248,7 @@ class TripList extends StatelessWidget {
       case 'Ongoing':
         return Colors.orange;
       case 'Completed':
-        return Colors.green;
+        return const Color.fromARGB(255, 108, 131, 55);
       default:
         return Colors.grey;
     }

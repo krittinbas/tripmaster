@@ -1,132 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:tripmaster/consts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:tripmaster/constants/constants.dart';
 
 class PolylineService {
   final PolylinePoints polylinePoints = PolylinePoints();
-  final List<List<dynamic>> uploadTrips;
-  PolylineService(this.uploadTrips);
-  List<LatLng> polylineCoordinates = [];
 
-  Future<Set<Polyline>> polyline(int dayIndex) async {
-    List<Polyline> polylineOptions = [];
+  Future<List<LatLng>> getPolylinePoints(LatLng start, LatLng end) async {
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      googleApiKey: googleApiKey,
+      request: PolylineRequest(
+        origin: PointLatLng(start.latitude, start.longitude),
+        destination: PointLatLng(end.latitude, end.longitude),
+        mode: TravelMode.driving,
+      ),
+    );
 
-    if (uploadTrips.isEmpty) return {};
+    if (result.points.isNotEmpty) {
+      return result.points.map((p) => LatLng(p.latitude, p.longitude)).toList();
+    } else {
+      print("Failed to get polyline: ${result.errorMessage}");
+      return [];
+    }
+  }
 
-    polylineOptions.clear();
-    if (dayIndex == -1) {
-      print('uploadTrips:$uploadTrips');
-      for (var days in uploadTrips) {
-        for (int i = 0; i < days.length - 1; i++) {
-          List<Map<String, dynamic>> day =
-              List<Map<String, dynamic>>.from(days);
-          var start = day[i];
-          var end = day[i + 1];
+  Future<Set<Polyline>> updatePolylines(
+      Map<String, dynamic> uploadTrips, int selectedDay) async {
+    Set<Polyline> polylines = {};
 
-          if (int.parse(end['passed']) == 1) {
-            for (int j = 0; j <= i; j++) {
-              day[j]['passed'] = '1';
-            }
-          }
+    if (uploadTrips.isEmpty || !uploadTrips.containsKey('plan'))
+      return polylines;
 
-          int polylineWidth = 5;
-          Color polylineColor = Colors.grey;
-          if (int.parse(start['passed']) == 1 &&
-              int.parse(end['passed']) == 1) {
-            polylineColor = Colors.green;
-            polylineWidth = 7;
-          }
+    List<dynamic> days = uploadTrips['plan'];
+    List<dynamic> selectedDays = selectedDay == -1 ? days : [days[selectedDay]];
 
-          PolylineResult result =
-              await polylinePoints.getRouteBetweenCoordinates(
-            googleApiKey: googleApiKey,
-            request: PolylineRequest(
-              origin: PointLatLng(
-                  start['location']['lat'], start['location']['lng']),
-              destination:
-                  PointLatLng(end['location']['lat'], end['location']['lng']),
-              mode: TravelMode.driving,
-            ),
-          );
+    for (var dayIndex = 0; dayIndex < selectedDays.length; dayIndex++) {
+      List<dynamic> places = selectedDays[dayIndex]['places'];
+      if (places.length < 2) continue;
 
-          List<LatLng> tempPolylineCoordinates = [];
-          if (result.points.isNotEmpty) {
-            for (var point in result.points) {
-              tempPolylineCoordinates
-                  .add(LatLng(point.latitude, point.longitude));
-            }
-          }
-          print(
-              'tempPolylineCoordinates (from ${start['location']} to ${end['location']}):');
-          for (var latLng in tempPolylineCoordinates) {
-            print('Lat: ${latLng.latitude}, Lng: ${latLng.longitude}');
-          }
+      for (int i = 0; i < places.length - 1; i++) {
+        LatLng start = LatLng(places[i]['location_position']['lat'],
+            places[i]['location_position']['lng']);
+        LatLng end = LatLng(places[i + 1]['location_position']['lat'],
+            places[i + 1]['location_position']['lng']);
 
-          if (tempPolylineCoordinates.isNotEmpty) {
-            polylineOptions.add(
-              Polyline(
-                polylineId: PolylineId('day_${day[i]}_line_$i'),
-                color: polylineColor,
-                points: tempPolylineCoordinates,
-                width: polylineWidth,
-              ),
-            );
-          }
-        }
-      }
-    } else if (dayIndex < uploadTrips.length) {
-      var dayLocations = uploadTrips[dayIndex];
-      for (int i = 0; i < dayLocations.length - 1; i++) {
-        var start = dayLocations[i];
-        var end = dayLocations[i + 1];
+        bool isPassed =
+            places[i]['passed'] == '1' && places[i + 1]['passed'] == '1';
 
-        if (int.parse(end['passed']) == 1) {
-          for (int j = 0; j <= i; j++) {
-            dayLocations[j]['passed'] = '1';
-          }
-          print('check passed:$uploadTrips');
-        }
+        List<LatLng> route = await getPolylinePoints(start, end);
 
-        int polylineWidth = 5;
-        Color polylineColor = Colors.grey;
-        if (int.parse(start['passed']) == 1 && int.parse(end['passed']) == 1) {
-          polylineColor = Colors.green;
-          polylineWidth = 7;
-        }
+        String polylineId = "day_${dayIndex}_segment_${i}_to_${i + 1}";
 
-        PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-          googleApiKey: googleApiKey,
-          request: PolylineRequest(
-            origin:
-                PointLatLng(start['location']['lat'], start['location']['lng']),
-            destination:
-                PointLatLng(end['location']['lat'], end['location']['lng']),
-            mode: TravelMode.driving,
+        polylines.add(
+          Polyline(
+            polylineId: PolylineId(polylineId),
+            color: isPassed
+                ? const Color.fromARGB(255, 108, 131, 55)
+                : Colors.grey,
+            width: 5,
+            points: route,
           ),
         );
-
-        List<LatLng> tempPolylineCoordinates = [];
-        if (result.points.isNotEmpty) {
-          for (var point in result.points) {
-            tempPolylineCoordinates
-                .add(LatLng(point.latitude, point.longitude));
-          }
-        }
-
-        if (tempPolylineCoordinates.isNotEmpty) {
-          polylineOptions.add(
-            Polyline(
-              polylineId: PolylineId('$i'),
-              color: polylineColor,
-              points: tempPolylineCoordinates,
-              width: polylineWidth,
-            ),
-          );
-        }
       }
     }
 
-    return polylineOptions.toSet();
+    return polylines;
   }
 }

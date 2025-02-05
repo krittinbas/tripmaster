@@ -222,14 +222,17 @@ class TripInfoBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final int totalDays = plans.length;
 
-    final int totalLocations = 2;
+    final int totalLocations = plans.fold<int>(
+      0,
+      (sum, plan) => (sum + (plan['places']?.length ?? 0)).toInt(),
+    );
 
     String filter = "";
     if (statusColor == Colors.red) {
       filter = "pending";
     } else if (statusColor == Colors.orange) {
       filter = "Ongoing";
-    } else if (statusColor == Colors.green) {
+    } else if (statusColor == const Color.fromARGB(255, 108, 131, 55)) {
       filter = "Completed";
     }
 
@@ -297,7 +300,7 @@ class TripInfoBox extends StatelessWidget {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8.0),
                         child: Image.asset(
-                          'assets/screens/dot.png',
+                          'assets/screens/location.png',
                           width: 20,
                           height: 20,
                           fit: BoxFit.cover,

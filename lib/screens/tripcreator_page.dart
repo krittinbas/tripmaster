@@ -41,7 +41,7 @@ class _TripCreatorPageState extends State<TripCreatorPage> {
             child: Padding(
               padding: EdgeInsets.only(top: 8, left: 12),
               child: Text(
-                "trip's name",
+                "Trip's name",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
