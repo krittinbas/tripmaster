@@ -26,7 +26,7 @@ class _EditdetailPageState extends State<EditdetailPage> {
   @override
   void initState() {
     super.initState();
-    _loadTripData(); // โหลดข้อมูลเมื่อเริ่มหน้า
+    _loadTripData();
   }
 
   Future<void> _loadTripData() async {
@@ -127,7 +127,8 @@ class _EditdetailPageState extends State<EditdetailPage> {
   Widget build(BuildContext context) {
     if (isLoading) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: const Center(child: Text("Loading...")),
+        // Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -181,9 +182,10 @@ class _EditdetailPageState extends State<EditdetailPage> {
                       left: 8.0, right: 8, top: 16, bottom: 16),
                   child: TripInfoBox(
                     statusColor: widget.statusColor,
-                    origin: plans[0]['places'][0]['location_name'],
-                    destination: plans.last['places'].last['location_name'],
-                    plans: plans,
+                    origin: plans[0]['places'][0]['location_name'] ?? 'origin',
+                    destination: plans.last['places'].last['location_name'] ??
+                        'destination',
+                    plans: plans ?? [],
                     origin_vicinity:
                         (plans.isNotEmpty && plans.first.isNotEmpty)
                             ? (plans[0]['places'][0]['location_vicinity'] ??
@@ -200,211 +202,190 @@ class _EditdetailPageState extends State<EditdetailPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ...List.generate(plans.length, (index) {
-                    final day = plans[index];
-                    print('Day content: $day');
-                    List<Widget> placeWidgets = [];
-                    if (day['places'].isNotEmpty) {
-                      day['places'].forEach((place) {
-                        placeWidgets.add(
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  child: Image.asset(
-                                    'assets/screens/dot.png',
-                                    width: 30,
-                                    height: 30,
-                                    fit: BoxFit.cover,
+                  if (plans.isNotEmpty)
+                    ...List.generate(plans.length, (index) {
+                      final day = plans[index];
+                      print('Day content: $day');
+                      List<Widget> placeWidgets = [];
+
+                      if (day['places'].isNotEmpty) {
+                        day['places'].forEach((place) {
+                          placeWidgets.add(
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    child: Image.asset(
+                                      'assets/screens/dot.png',
+                                      width: 30,
+                                      height: 30,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        place['location_name'] ?? 'No Name',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        place['location_vicinity'] ??
-                                            'No Address',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                    ],
-                                  ),
-                                ),
-                                Align(
-                                  alignment: Alignment.topCenter,
-                                  child: PopupMenuButton<String>(
-                                    color: Colors.white,
-                                    onSelected: (value) async {
-                                      if (value == 'Edit') {
-                                        final updatedPlace =
-                                            await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const MapCreatePage(),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          place['location_name'] ?? 'No Name',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                        );
-                                        if (updatedPlace != null) {
+                                        ),
+                                        Text(
+                                          place['location_vicinity'] ??
+                                              'No Address',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                      ],
+                                    ),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.topCenter,
+                                    child: PopupMenuButton<String>(
+                                      color: Colors.white,
+                                      onSelected: (value) async {
+                                        if (value == 'Edit') {
+                                          final updatedPlace =
+                                              await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const MapCreatePage(),
+                                            ),
+                                          );
+                                          if (updatedPlace != null) {
+                                            setState(() {
+                                              int placeIndex = plans[index]
+                                                      ['places']
+                                                  .indexOf(place);
+                                              plans[index]['places'][placeIndex]
+                                                      ['location_name'] =
+                                                  updatedPlace['location_name'];
+                                              plans[index]['places'][placeIndex]
+                                                      ['location_vicinity'] =
+                                                  updatedPlace[
+                                                      'location_vicinity'];
+                                              plans[index]['places'][placeIndex]
+                                                      ['location_position'] =
+                                                  updatedPlace[
+                                                      'location_position'];
+                                            });
+                                            print("updatedPlace Days: $plans");
+                                          }
+                                        } else if (value == 'Delete') {
                                           setState(() {
-                                            int placeIndex = plans[index]
-                                                    ['places']
-                                                .indexOf(place);
-                                            plans[index]['places'][placeIndex]
-                                                    ['location_name'] =
-                                                updatedPlace['location_name'];
-                                            plans[index]['places'][placeIndex]
-                                                    ['location_vicinity'] =
-                                                updatedPlace[
-                                                    'location_vicinity'];
-                                            plans[index]['places'][placeIndex]
-                                                    ['location_position'] =
-                                                updatedPlace[
-                                                    'location_position'];
+                                            plans[index]['places']
+                                                .remove(place);
                                           });
-                                          print("updatedPlace Days: $plans");
+                                          print("Deleted Days: $plans");
                                         }
-                                      } else if (value == 'Delete') {
-                                        setState(() {
-                                          plans[index]['places'].remove(place);
-                                        });
-                                        print("Deleted Days: $plans");
-                                      }
-                                    },
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem<String>(
-                                        value: 'Edit',
-                                        child: Text('Edit'),
-                                      ),
-                                      const PopupMenuItem<String>(
-                                        value: 'Delete',
-                                        child: Text('Delete'),
-                                      ),
-                                    ],
-                                    icon: const Icon(Icons.more_horiz),
+                                      },
+                                      itemBuilder: (context) => [
+                                        const PopupMenuItem<String>(
+                                          value: 'Edit',
+                                          child: Text('Edit'),
+                                        ),
+                                        const PopupMenuItem<String>(
+                                          value: 'Delete',
+                                          child: Text('Delete'),
+                                        ),
+                                      ],
+                                      icon: const Icon(Icons.more_horiz),
+                                    ),
                                   ),
+                                ],
+                              ),
+                            ),
+                          );
+                        });
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Day - ${index + 1}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
                                 ),
-                              ],
-                            ),
-                          ),
-                        );
-                      });
-                    }
-                    if (day['places'].isEmpty) {
-                      placeWidgets.add(
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              "No places added yet",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Day - ${index + 1}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...placeWidgets,
-                        if (day['places'].isNotEmpty)
-                          Padding(
-                            padding:
-                                const EdgeInsets.only(left: 16.0, right: 16),
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final selectedPlaces = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const MapCreatePage(),
-                                  ),
-                                );
-
-                                if (selectedPlaces != null) {
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(Icons.delete,
+                                    color: Colors.black), // ปุ่มลบ
+                                onPressed: () {
                                   setState(() {
-                                    plans[index]['places'].add({
-                                      'location_name':
-                                          selectedPlaces['location_name'],
-                                      'location_vicinity':
-                                          selectedPlaces['location_vicinity'],
-                                      'location_position':
-                                          selectedPlaces['location_position'],
-                                      'passed': '0',
-                                    });
+                                    plans.removeAt(index);
                                   });
-                                  print("Add Days: $plans");
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.grey,
-                                backgroundColor: Colors.white,
-                                minimumSize: const Size(double.infinity, 25),
-                                textStyle: const TextStyle(fontSize: 25),
-                                side: const BorderSide(
-                                  color: Colors.grey,
-                                  width: 1,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
+                                  print("Updated plans after delete: $plans");
+                                },
                               ),
-                              child: const Text('+'),
-                            ),
-                          )
-                        else
-                          Padding(
-                            padding:
-                                const EdgeInsets.only(left: 16.0, right: 16),
-                            child: ElevatedButton(
-                              onPressed: null, // ปิดการใช้งานปุ่ม
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.grey,
-                                backgroundColor: Colors.grey
-                                    .shade300, // เปลี่ยนสีให้ดูว่าใช้ไม่ได้
-                                minimumSize: const Size(double.infinity, 25),
-                                textStyle: const TextStyle(fontSize: 25),
-                                side: const BorderSide(
-                                  color: Colors.grey,
-                                  width: 1,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: const Text('+ (Add Place)'),
-                            ),
+                            ],
                           ),
-                        const Divider(
-                          color: Colors.grey,
-                          thickness: 0.5,
-                          height: 32.0,
-                        ),
-                      ],
-                    );
-                  }),
+                          const SizedBox(height: 8),
+                          ...placeWidgets,
+                          if (day['places'].isNotEmpty)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 16.0, right: 16),
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  final selectedPlaces = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const MapCreatePage(),
+                                    ),
+                                  );
+
+                                  if (selectedPlaces != null) {
+                                    setState(() {
+                                      plans[index]['places'].add({
+                                        'location_name':
+                                            selectedPlaces['location_name'],
+                                        'location_vicinity':
+                                            selectedPlaces['location_vicinity'],
+                                        'location_position':
+                                            selectedPlaces['location_position'],
+                                        'passed': '0',
+                                      });
+                                    });
+                                    print("Add Days: $plans");
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.grey,
+                                  backgroundColor: Colors.white,
+                                  minimumSize: const Size(double.infinity, 25),
+                                  textStyle: const TextStyle(fontSize: 25),
+                                  side: const BorderSide(
+                                    color: Colors.grey,
+                                    width: 1,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text('+'),
+                              ),
+                            )
+                        ],
+                      );
+                    }),
                 ],
               ),
             ],

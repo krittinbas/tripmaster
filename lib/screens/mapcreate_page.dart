@@ -55,7 +55,7 @@ class _MapCreatePageState extends State<MapCreatePage> {
     }
 
     final url = Uri.parse(
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$googleApiKey');
+        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$googleApiKey&components=country:th');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -69,7 +69,7 @@ class _MapCreatePageState extends State<MapCreatePage> {
   Future<void> _fetchNearbyPlaces(LatLng latLng) async {
     //แสดงพืนที่ใกล้เคียง
     final nearbySearchUrl = Uri.parse(
-      'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latLng.latitude},${latLng.longitude}&radius=100&key=$googleApiKey',
+      'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latLng.latitude},${latLng.longitude}&radius=100&key=$googleApiKey&components=country:th',
     );
 
     final response = await http.get(nearbySearchUrl);
@@ -126,7 +126,7 @@ class _MapCreatePageState extends State<MapCreatePage> {
     searchController.text = placeName;
 
     final url = Uri.parse(
-        'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$googleApiKey');
+        'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$googleApiKey&components=country:th');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {

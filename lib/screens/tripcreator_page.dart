@@ -36,6 +36,47 @@ class _TripCreatorPageState extends State<TripCreatorPage> {
       ),
       body: Column(
         children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Image.asset(
+                      'assets/screens/homeBg.png',
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      foregroundColor: Colors.grey,
+                      backgroundColor: Colors.white,
+                      textStyle: const TextStyle(fontSize: 25),
+                      side: const BorderSide(
+                        color: Colors.grey,
+                        width: 1,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      minimumSize: Size(80, 80),
+                    ),
+                    onPressed: () {},
+                    child: const Text('+'),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const Align(
             alignment: Alignment.centerLeft,
             child: Padding(
@@ -90,20 +131,34 @@ class _TripCreatorPageState extends State<TripCreatorPage> {
                   );
                 } else {
                   return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Text(
-                          'Day - ${index + 1}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(
+                              'Day - ${index + 1}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.delete,
+                                color: Colors.black), // ปุ่มลบ
+                            onPressed: () {
+                              setState(() {
+                                plans.removeAt(index);
+                              });
+                              print("Updated plans after delete: $plans");
+                            },
+                          ),
+                        ],
                       ),
-                      if (plans[index]
-                          .isEmpty) // Validation: Check if the day has valid data
+                      if (plans[index].isEmpty)
                         const Padding(
                           padding: EdgeInsets.all(12.0),
                           child: Text(
