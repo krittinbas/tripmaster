@@ -138,9 +138,34 @@ class NotificationList extends StatelessWidget {
     return Container(
       color: isRead ? null : Colors.grey.shade50,
       child: ListTile(
-        leading: const CircleAvatar(
-          backgroundColor: Colors.grey,
-          child: Icon(Icons.person, color: Colors.white),
+        leading: FutureBuilder<QuerySnapshot>(
+          // ค้นหา user ที่มี user_id ตรงกับ sender_id
+          future: FirebaseFirestore.instance
+              .collection('User')
+              .where('user_id', isEqualTo: data['sender_id'])
+              .get(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+              final userData =
+                  snapshot.data!.docs.first.data() as Map<String, dynamic>;
+              final profileImage = userData['profile_image'];
+
+              return CircleAvatar(
+                backgroundColor: Colors.grey,
+                backgroundImage: profileImage != null && profileImage.isNotEmpty
+                    ? NetworkImage(profileImage)
+                    : null,
+                child: profileImage == null || profileImage.isEmpty
+                    ? const Icon(Icons.person, color: Colors.white)
+                    : null,
+              );
+            }
+            // แสดง loading หรือ icon default ระหว่างโหลดข้อมูล
+            return const CircleAvatar(
+              backgroundColor: Colors.grey,
+              child: Icon(Icons.person, color: Colors.white),
+            );
+          },
         ),
         title: RichText(
           text: TextSpan(
