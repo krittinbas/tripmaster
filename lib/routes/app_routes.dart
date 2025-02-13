@@ -20,7 +20,7 @@ class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
     welcome: (context) => const WelcomePage(),
     login: (context) => const LoginPage(),
-    home: (context) => const HomePage(),
+    home: (context) => HomePage(),
     registerNormal: (context) => const RegisterPage(),
     registerBusiness: (context) => const RegisterBusinessPage(),
     forget: (context) => const ForgetPasswordScreen(),
