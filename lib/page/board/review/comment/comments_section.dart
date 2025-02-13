@@ -189,7 +189,7 @@ class CommentList extends StatelessWidget {
   }
 }
 
-class CommentItem extends StatefulWidget {
+class CommentItem extends StatelessWidget {
   final Map<String, dynamic> comment;
 
   const CommentItem({
@@ -198,217 +198,31 @@ class CommentItem extends StatefulWidget {
   });
 
   @override
-  State<CommentItem> createState() => _CommentItemState();
-}
-
-class _CommentItemState extends State<CommentItem> {
-  bool isEditing = false;
-  late TextEditingController _editController;
-
-  @override
-  void initState() {
-    super.initState();
-    _editController =
-        TextEditingController(text: widget.comment['comment_text']);
-  }
-
-  @override
-  void dispose() {
-    _editController.dispose();
-    super.dispose();
-  }
-
-  void _showActionSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit_outlined, color: Colors.black87),
-              title: const Text(
-                'Edit Comment',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                setState(() {
-                  isEditing = true;
-                });
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text(
-                'Delete Comment',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.red,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _deleteComment();
-              },
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _deleteComment() async {
-    try {
-      final shouldDelete = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Delete Comment'),
-          content: const Text('Are you sure you want to delete this comment?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        ),
-      );
-
-      if (shouldDelete ?? false) {
-        await FirebaseFirestore.instance
-            .collection('Comment')
-            .doc(widget.comment['comment_id'])
-            .delete();
-      }
-    } catch (e) {
-      print('Error deleting comment: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete comment')),
-        );
-      }
-    }
-  }
-
-  Future<void> _updateComment() async {
-    if (_editController.text.trim().isEmpty) return;
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('Comment')
-          .doc(widget.comment['comment_id'])
-          .update({
-        'comment_text': _editController.text.trim(),
-        'edited_at': FieldValue.serverTimestamp(),
-      });
-
-      if (mounted) {
-        setState(() {
-          isEditing = false;
-        });
-      }
-    } catch (e) {
-      print('Error updating comment: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update comment')),
-        );
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    final isCommentOwner = currentUserId == widget.comment['user_id'];
-
-    return GestureDetector(
-      onLongPress: isCommentOwner ? _showActionSheet : null,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16.0,
-          vertical: 8.0,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            UserAvatar(userId: widget.comment['user_id']),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  UsernameFuture(userId: widget.comment['user_id']),
-                  const SizedBox(height: 2),
-                  if (isEditing)
-                    TextField(
-                      controller: _editController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        suffixIcon: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  isEditing = false;
-                                  _editController.text =
-                                      widget.comment['comment_text'];
-                                });
-                              },
-                              icon: const Icon(Icons.close, color: Colors.grey),
-                            ),
-                            IconButton(
-                              onPressed: _updateComment,
-                              icon: const Icon(Icons.check, color: Colors.blue),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    Text(
-                      widget.comment['comment_text'] ?? '',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16.0,
+        vertical: 8.0,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          UserAvatar(userId: comment['user_id']),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                UsernameFuture(userId: comment['user_id']),
+                const SizedBox(height: 2),
+                Text(
+                  comment['comment_text'] ?? '',
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
