@@ -9,52 +9,103 @@ class AuthService {
     required String email,
     required String password,
     required String phoneNumber,
-    bool isBusiness = false, // เพิ่ม parameter เพื่อตรวจสอบประเภทบัญชี
+    required String username,
+    bool isBusiness = false,
     String? businessName,
     String? businessType,
     String? businessAddress,
     String? taxId,
   }) async {
+    // Validate basic input data
+    if (email.trim().isEmpty ||
+        password.isEmpty ||
+        phoneNumber.trim().isEmpty ||
+        username.trim().isEmpty) {
+      return 'Please fill in all required fields';
+    }
+
+    // Validate business data if it's a business account
+    if (isBusiness) {
+      if (businessName == null ||
+          businessName.trim().isEmpty ||
+          businessType == null ||
+          businessType.trim().isEmpty ||
+          businessAddress == null ||
+          businessAddress.trim().isEmpty ||
+          taxId == null ||
+          taxId.trim().isEmpty) {
+        return 'Please fill in all business information';
+      }
+    }
+
     try {
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: email,
+      // Create Firebase Auth user
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
         password: password,
       );
 
-      // บันทึกข้อมูลผู้ใช้ลงใน Firestore
-      await _firestore.collection('User').doc(userCredential.user!.uid).set({
-        'business_id':
-            isBusiness ? userCredential.user!.uid : "", // ตรวจสอบประเภทบัญชี
-        'email': email,
-        'password': password, // ไม่ควรเก็บ plain text password
-        'phonenumber': phoneNumber,
-        'user_bio': "",
+      final userId = userCredential.user!.uid;
+
+      // Prepare user data
+      final userData = {
+        'business_id': isBusiness ? userId : null,
+        'email': email.trim(),
+        'phonenumber': phoneNumber.trim(),
+        'user_bio': null,
         'user_follower': 0,
         'user_following': 0,
-        'user_id': userCredential.user!.uid,
-        'user_title': "",
+        'user_id': userId,
+        'user_title': null,
         'user_triptaken': 0,
-        'username': email,
-      });
+        'username': username.trim(),
+        'created_at': FieldValue.serverTimestamp(),
+      };
 
-      // ถ้าเป็น business account ให้เพิ่มข้อมูลใน collection 'Business'
-      if (isBusiness) {
-        await _firestore
-            .collection('Business')
-            .doc(userCredential.user!.uid)
-            .set({
-          'business_id': userCredential.user!.uid,
-          'business_name': businessName,
-          'business_type': businessType,
-          'business_address': businessAddress,
-          'tax_id': taxId,
-        });
+      // Create user document
+      await _firestore.collection('User').doc(userId).set(userData);
+
+      // Create business document if needed
+      if (isBusiness &&
+          businessName != null &&
+          businessType != null &&
+          businessAddress != null &&
+          taxId != null) {
+        final businessData = {
+          'business_id': userId,
+          'business_name': businessName.trim(),
+          'business_type': businessType.trim(),
+          'business_address': businessAddress.trim(),
+          'tax_id': taxId.trim(),
+          'created_at': FieldValue.serverTimestamp(),
+          'user_id': userId,
+          'status': 'active',
+        };
+
+        await _firestore.collection('Business').doc(userId).set(businessData);
       }
 
-      return null; // success
+      return null; // Success
+    } on FirebaseAuthException catch (e) {
+      return _getAuthErrorMessage(e);
     } catch (e) {
-      return e.toString(); // error message
+      print('Registration error: $e');
+      return 'An unexpected error occurred. Please try again.';
+    }
+  }
+
+  String _getAuthErrorMessage(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'weak-password':
+        return 'Password should be at least 6 characters';
+      case 'email-already-in-use':
+        return 'This email is already registered';
+      case 'invalid-email':
+        return 'Please enter a valid email address';
+      case 'network-request-failed':
+        return 'Network error. Please check your connection';
+      default:
+        return e.message ?? 'Registration failed. Please try again.';
     }
   }
 }

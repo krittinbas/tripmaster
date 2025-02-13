@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:tripmaster/core/app.dart';
-import 'package:tripmaster/database/firebase_config.dart';
+import 'package:tripmaster/routes/app.dart';
+import 'package:tripmaster/config/firebase_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
