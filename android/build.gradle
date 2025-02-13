@@ -6,7 +6,8 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:7.0.4' // ระบุเวอร์ชันให้ตรงกับที่ใช้งาน
         classpath 'com.google.gms:google-services:4.3.15' // เพิ่ม dependency ของ Google Services
-    }
+ 
+    }   
 }
 
 allprojects {

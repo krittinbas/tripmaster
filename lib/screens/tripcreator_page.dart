@@ -1,8 +1,13 @@
+import 'dart:io';
+import 'package:image/image.dart' as img;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:tripmaster/database/profile_service.dart';
 import 'home_page.dart';
 import 'package:tripmaster/screens/mapcreate_page.dart';
+import 'package:file_picker/file_picker.dart';
 
 class TripCreatorPage extends StatefulWidget {
   const TripCreatorPage({super.key});
@@ -16,6 +21,7 @@ class _TripCreatorPageState extends State<TripCreatorPage> {
   final CollectionReference _tripcollection =
       FirebaseFirestore.instance.collection('Trips');
   final ProfileService _profileService = ProfileService();
+  final FirebaseStorage firebaseStorage = FirebaseStorage.instance;
 
   Future<String?> _fetchUserId() async {
     final userProfile = await _profileService.getUserProfile();
@@ -26,6 +32,150 @@ class _TripCreatorPageState extends State<TripCreatorPage> {
   }
 
   List<dynamic> plans = [];
+  List<File> imageFiles = [];
+
+  Future<void> _pickMultipleImages() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: true,
+      );
+
+      if (result != null) {
+        final validFiles = result.paths
+            .where((path) => path != null && File(path!).existsSync())
+            .map((path) => File(path!))
+            .toList();
+
+        if (validFiles.isEmpty) {
+          _showSnackBar('No valid images selected.');
+          return;
+        }
+
+        setState(() {
+          imageFiles = validFiles;
+        });
+      } else {
+        _showSnackBar('No images selected.');
+      }
+    } catch (e) {
+      _showSnackBar('Error picking images: $e');
+    }
+  }
+
+  void _showSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<void> _checkFileSize(File file) async {
+    final size = await file.length();
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (size > maxSize) {
+      throw Exception('File size exceeds 5MB limit');
+    }
+  }
+
+  Future<File> _compressImage(File file) async {
+    try {
+      final bytes = await file.readAsBytes();
+      final image = img.decodeImage(bytes);
+
+      if (image == null) {
+        throw Exception('Failed to decode image');
+      }
+
+      final compressedBytes = img.encodeJpg(image, quality: 85);
+      final tempDir = await Directory.systemTemp.createTemp();
+      final compressedFile = File(
+          '${tempDir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      await compressedFile.writeAsBytes(compressedBytes);
+
+      if (!compressedFile.existsSync()) {
+        throw Exception('Failed to save compressed file');
+      }
+
+      return compressedFile;
+    } catch (e) {
+      _showSnackBar('Error compressing image: $e');
+      return file;
+    }
+  }
+
+  Future<List<String>> _uploadImages() async {
+    List<String> imageUrls = [];
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (imageFiles.isEmpty) {
+      _showSnackBar('No images selected.');
+      return [];
+    }
+
+    if (user == null) {
+      _showSnackBar('User not logged in.');
+      return [];
+    }
+
+    try {
+      for (var i = 0; i < imageFiles.length; i++) {
+        final image = imageFiles[i];
+
+        try {
+          await _checkFileSize(image);
+        } catch (e) {
+          _showSnackBar('Image $i is too large: $e');
+          continue;
+        }
+
+        final compressedImage = await _compressImage(image);
+
+        final extension = image.path.split('.').last;
+        final fileName =
+            'tripimages_${user.uid}_${DateTime.now().millisecondsSinceEpoch}_$i.$extension';
+        final storageRef =
+            FirebaseStorage.instance.ref().child('trip_images/$fileName');
+        print('Uploading to: ${storageRef.fullPath}');
+
+        final uploadTask = storageRef.putFile(compressedImage);
+
+        uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+          final progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          print('Total Bytes: ${snapshot.totalBytes}');
+          _showSnackBar('Uploading image $i: ${progress.toStringAsFixed(2)}%');
+        });
+
+        try {
+          final snapshot = await uploadTask;
+          print("Upload state: ${snapshot.state}");
+
+          if (snapshot.state == TaskState.success) {
+            final downloadUrl = await snapshot.ref.getDownloadURL();
+            print("Download URL: $downloadUrl");
+            imageUrls.add(downloadUrl);
+          } else {
+            print("Upload failed with state: ${snapshot.state}");
+            throw Exception('Upload failed with state: ${snapshot.state}');
+          }
+        } catch (e) {
+          print("Error details: $e");
+          _showSnackBar('Error uploading image $i: $e');
+          throw Exception('Failed to upload image $i: $e');
+        }
+      }
+    } catch (e) {
+      _showSnackBar('Error uploading images: $e');
+    }
+
+    return imageUrls;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,42 +186,91 @@ class _TripCreatorPageState extends State<TripCreatorPage> {
       ),
       body: Column(
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: Image.asset(
-                      'assets/screens/homeBg.png',
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      foregroundColor: Colors.grey,
-                      backgroundColor: Colors.white,
-                      textStyle: const TextStyle(fontSize: 25),
-                      side: const BorderSide(
-                        color: Colors.grey,
-                        width: 1,
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      if (imageFiles.isNotEmpty)
+                        ...imageFiles.map((imageFile) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  child: imageFile.path.startsWith('assets')
+                                      ? Image.asset(
+                                          imageFile.path,
+                                          width: 80,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.file(
+                                          File(imageFile.path),
+                                          width: 80,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                        ),
+                                ),
+                                Positioned(
+                                  top: -10,
+                                  right: -10,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        imageFiles.remove(imageFile);
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromARGB(
+                                            255, 196, 196, 196),
+                                        borderRadius: BorderRadius.circular(50),
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            foregroundColor: Colors.grey,
+                            backgroundColor: Colors.white,
+                            textStyle: const TextStyle(fontSize: 25),
+                            side: const BorderSide(
+                              color: Colors.grey,
+                              width: 1,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            minimumSize: Size(80, 80),
+                          ),
+                          onPressed: () {
+                            _pickMultipleImages();
+                          },
+                          child: const Text('+'),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      minimumSize: Size(80, 80),
-                    ),
-                    onPressed: () {},
-                    child: const Text('+'),
+                    ],
                   ),
                 ),
               ],
@@ -335,6 +534,16 @@ class _TripCreatorPageState extends State<TripCreatorPage> {
                             return;
                           }
 
+                          List<String> uploadedImageUrls =
+                              await _uploadImages();
+                          if (uploadedImageUrls.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Failed to upload images')),
+                            );
+                            return; // ถ้าไม่สามารถอัปโหลดภาพได้ จะหยุดการดำเนินการต่อ
+                          }
+
                           for (var day in plans) {
                             for (var location in day) {
                               location['passed'] = '0';
@@ -397,6 +606,7 @@ class _TripCreatorPageState extends State<TripCreatorPage> {
                                 'timestamp': FieldValue.serverTimestamp(),
                                 'status': 'Pending',
                                 'user_id': userId,
+                                'uploadedImageUrls': uploadedImageUrls,
                               });
                               await trip2.update({
                                 'trip_id': trip2.id,
