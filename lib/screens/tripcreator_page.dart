@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:tripmaster/database/profile_service.dart';
+import 'package:tripmaster/service/profile_service.dart';
 import 'home_page.dart';
 import 'package:tripmaster/screens/mapcreate_page.dart';
 import 'package:file_picker/file_picker.dart';

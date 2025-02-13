@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:tripmaster/page/board/board/board_page.dart';
+import 'package:tripmaster/page/profile/profile_page.dart';
+import 'package:tripmaster/page/trip_page.dart';
 import 'package:tripmaster/routes/bottom_navigation.dart'; // Import ไฟล์ BottomNavigationBar ที่แยกออกมา
 import 'package:tripmaster/screens/tripcreator_page.dart';
-import 'board_page.dart'; // Import หน้า Board
 import 'map_page.dart'; // Import หน้า Map
-import 'profile_page.dart'; // Import หน้า Profile
-import 'trip_page.dart'; // Import หน้า Trip
 import '../widgets/buttons/elevated_button.dart';
 import '../widgets/buttons/outlined_button.dart';
 

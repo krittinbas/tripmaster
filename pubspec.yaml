@@ -55,6 +55,8 @@ dependencies:
   timeago: ^3.6.1
   http: ^1.2.1  # ใช้เวอร์ชันเดียวกับที่ flutter_map ต้องการ
   google_gemini: ^0.1.2  # package ใหม่ที่รองรับ http ^1.2.1
+  flutter_polyline_points: ^2.1.0
+  location: ^8.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

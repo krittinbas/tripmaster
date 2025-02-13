@@ -2,7 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:tripmaster/database/profile_service.dart';
+import 'package:tripmaster/service/profile_service.dart';
 import 'package:tripmaster/widgets/TripCard.dart';
 
 class TripPage extends StatefulWidget {

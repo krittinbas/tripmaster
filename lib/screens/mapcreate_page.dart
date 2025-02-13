@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
-import 'package:tripmaster/consts.dart';
+import 'package:tripmaster/constants/constants.dart';
 
 class MapCreatePage extends StatefulWidget {
   const MapCreatePage({super.key});

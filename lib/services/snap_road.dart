@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'package:tripmaster/consts.dart';
+import 'package:tripmaster/constants/constants.dart';
 import 'package:tripmaster/widgets/placedetails.dart';
 
 class SnapToRoadService {
