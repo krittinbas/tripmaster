@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tripmaster/consts.dart';
+import 'package:tripmaster/constants/constants.dart';
 
 class PlaceDetails extends StatelessWidget {
   final dynamic place;
@@ -19,6 +19,7 @@ class PlaceDetails extends StatelessWidget {
     } else {
       print('No photos available');
     }
+
     bool isCheckedpass = place['passed'] == '1';
 
     return Container(
