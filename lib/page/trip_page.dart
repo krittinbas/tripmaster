@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tripmaster/service/profile_service.dart';
 import 'package:tripmaster/widgets/trip_card/tripcard.dart';
@@ -69,7 +70,8 @@ class _TripPageState extends State<TripPage>
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
             stream: FirebaseFirestore.instance
                 .collection('Trips')
-                .where('user_id', isEqualTo: userId)
+                .where('user_id',
+                    isEqualTo: FirebaseAuth.instance.currentUser?.uid)
                 .snapshots(),
             builder: (context,
                 AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
@@ -202,6 +204,11 @@ class TripList extends StatelessWidget {
       try {
         final tripData = trip.data() as Map<String, dynamic>;
 
+        List<String> imageAsset = [];
+        if (tripData['uploadedImageUrls'] != null) {
+          imageAsset = List<String>.from(tripData['uploadedImageUrls']);
+        }
+
         final status = tripData['status'] ?? 'Pending';
         if (filter == 'All' || status == filter) {
           if (_matchesSearchQuery(tripData)) {
@@ -210,11 +217,11 @@ class TripList extends StatelessWidget {
                   SectionHeader(title: status, color: _getStatusColor(status)));
               displayedStatuses.add(status);
             }
-
+            print("imageAsset : ${tripData['uploadedImageUrls']}");
             tripCards.add(TripCard(
               trip_id: tripData['trip_id'],
               statusColor: _getStatusColor(status),
-              imageAsset: tripData['imageAsset'] ?? 'assets/screens/homeBg.png',
+              imageAsset: imageAsset,
               name: tripData['trip_name'] ?? 'Trip’s name',
               origin: tripData['origin'] ?? 'origin',
               destination: tripData['destination'] ?? 'destination',

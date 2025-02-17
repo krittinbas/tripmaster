@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tripmaster/page/detailcard_page.dart';
 
@@ -42,7 +43,7 @@ class SectionHeader extends StatelessWidget {
 class TripCard extends StatelessWidget {
   final String trip_id;
   final Color statusColor;
-  final String imageAsset;
+  final List<String> imageAsset;
   final String name;
   final String origin;
   final String destination;
@@ -61,6 +62,8 @@ class TripCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return GestureDetector(
       onTap: () async {
         await Navigator.push(
@@ -91,11 +94,19 @@ class TripCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
-                child: Image.asset(
-                  imageAsset,
+                child: Image.network(
+                  imageAsset[0],
                   width: 70,
                   height: 70,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Image.asset(
+                      'assets/screens/homeBg.png', // ใช้รูปภาพสำรองใน assets
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.cover,
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 16),
